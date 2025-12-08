@@ -97,6 +97,14 @@ async function checkYtdlp(): Promise<string | null> {
   }
 }
 
+// Common yt-dlp args to bypass bot detection
+const YTDLP_COMMON_ARGS = [
+  '--no-check-certificates',
+  '--no-warnings',
+  '--extractor-args', '"youtube:player_client=android"',
+  '--user-agent', '"Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36"',
+].join(' ');
+
 export async function probeVideo(url: string): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
@@ -108,7 +116,7 @@ export async function probeVideo(url: string): Promise<DownloadResult> {
 
   try {
     const { stdout, stderr } = await execAsync(
-      `"${ytdlpPath}" --dump-json --no-download --no-warnings "${url}"`,
+      `"${ytdlpPath}" --dump-json --no-download ${YTDLP_COMMON_ARGS} "${url}"`,
       { timeout: 30000 }
     );
 
@@ -177,7 +185,7 @@ export async function downloadVideo(url: string, videoId: string): Promise<Downl
     const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
     
     // Download best quality and merge to MP4 for universal compatibility
-    const command = `"${ytdlpPath}" ${ffmpegArg} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" --merge-output-format mp4 -o "${filepath}" --no-warnings "${url}"`;
+    const command = `"${ytdlpPath}" ${ffmpegArg} ${YTDLP_COMMON_ARGS} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" --merge-output-format mp4 -o "${filepath}" "${url}"`;
     
     console.log('Running command:', command);
     await execAsync(command, { timeout: 300000 }); // 5 minute timeout
