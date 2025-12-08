@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: youtube-downloader
+    env: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DOWNLOAD_DIR
+        value: /tmp
+      - key: MAX_DURATION
+        value: 3600
