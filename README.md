@@ -1,106 +1,102 @@
-# YouTube Downloader
+# 🎬 JARS YouTube Video Downloader
 
-Internal tool to download YouTube videos (including Shorts) for testing purposes.
+A fast, minimal internal tool for downloading YouTube videos (including Shorts) for testing purposes.
 
-## Features
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker)
+![License](https://img.shields.io/badge/License-Internal-red?style=flat-square)
 
-- Download public and unlisted YouTube videos
-- Support for standard URLs and Shorts
-- Automatic video accessibility validation
-- Clean, minimal UI
-- JSON API response with metadata
-- Deployable to Vercel or GCP Cloud Run
+## ✨ Features
 
-## Quick Start
+- 📥 Download public & unlisted YouTube videos
+- 🎯 Support for standard URLs and Shorts
+- ✅ Automatic video accessibility validation
+- 🎨 Clean, minimal UI with Tailwind CSS
+- 📊 JSON API response with full metadata
+- 🐳 Docker-ready for easy deployment
+
+## 🖼️ Preview
+
+```
+┌─────────────────────────────────────────────────┐
+│           YouTube Downloader                     │
+│     Paste a YouTube URL to download             │
+│                                                  │
+│  ┌─────────────────────────────┐ ┌──────────┐  │
+│  │ https://youtube.com/...     │ │ Download │  │
+│  └─────────────────────────────┘ └──────────┘  │
+│                                                  │
+│  ┌─────────────────────────────────────────┐   │
+│  │ ✓ Success                                │   │
+│  │ Title: Video Title                       │   │
+│  │ Duration: 3:45                           │   │
+│  │ Size: 15.2 MB                            │   │
+│  │ [Download to Device]                     │   │
+│  └─────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────┘
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- yt-dlp installed on your system
-
-#### Install yt-dlp
-
-**macOS:**
-```bash
-brew install yt-dlp
-```
-
-**Windows:**
-```bash
-winget install yt-dlp
-# or download from https://github.com/yt-dlp/yt-dlp/releases
-```
-
-**Linux:**
-```bash
-sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-sudo chmod a+rx /usr/local/bin/yt-dlp
-```
+- yt-dlp (`winget install yt-dlp` or `brew install yt-dlp`)
+- ffmpeg (`winget install ffmpeg` or `brew install ffmpeg`)
 
 ### Local Development
 
 ```bash
+# Clone the repository
+git clone https://github.com/jishanahmed-shaikh/jars-ytvideo-downloader.git
+cd jars-ytvideo-downloader
+
 # Install dependencies
 npm install
+
+# Download yt-dlp binary (Windows)
+mkdir bin
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -o bin/yt-dlp.exe
 
 # Start development server
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deployment
+## 🐳 Deployment
 
-### ⚠️ Important: Vercel Limitations
+### Railway (Recommended)
 
-Vercel serverless functions **cannot run yt-dlp/ffmpeg binaries**. Use one of these alternatives:
-
-### Deploy to Railway (Recommended - Easiest)
-
-1. Push your code to GitHub
+1. Push code to GitHub
 2. Go to [railway.app](https://railway.app)
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Select your repository
-5. Railway auto-detects the Dockerfile and deploys
+3. Click **New Project** → **Deploy from GitHub repo**
+4. Select this repository
+5. Railway auto-detects Dockerfile and deploys ✨
 
-**Free tier:** 500 hours/month, $5 credit
+### Render
 
-### Deploy to Render
-
-1. Push your code to GitHub
+1. Push code to GitHub
 2. Go to [render.com](https://render.com)
-3. Create new "Web Service"
+3. Create **New Web Service**
 4. Connect your GitHub repo
-5. Select "Docker" as environment
+5. Select **Docker** environment
 6. Deploy
 
-**Free tier available**
-
-### Deploy to GCP Cloud Run
+### Docker (Self-hosted)
 
 ```bash
-# Build the Docker image
-docker build -t youtube-downloader .
+# Build image
+docker build -t jars-yt-downloader .
 
-# Tag for GCP
-docker tag youtube-downloader gcr.io/YOUR_PROJECT_ID/youtube-downloader
-
-# Push to GCP Container Registry
-docker push gcr.io/YOUR_PROJECT_ID/youtube-downloader
-
-# Deploy to Cloud Run
-gcloud run deploy youtube-downloader \
-  --image gcr.io/YOUR_PROJECT_ID/youtube-downloader \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 1Gi \
-  --timeout 300
+# Run container
+docker run -p 3000:3000 jars-yt-downloader
 ```
 
-## API Reference
+## 📡 API Reference
 
-### POST /api/download
+### POST `/api/download`
 
 Download a YouTube video.
 
@@ -115,11 +111,10 @@ Download a YouTube video.
 ```json
 {
   "success": true,
-  "filename": "Video_Title_VIDEO_ID.mp4",
-  "filepath": "/tmp/Video_Title_VIDEO_ID.mp4",
-  "size": 15728640,
   "title": "Video Title",
   "duration": 180,
+  "size": 15728640,
+  "filename": "Video_Title_VIDEO_ID.mp4",
   "videoId": "VIDEO_ID",
   "thumbnail": "https://..."
 }
@@ -136,44 +131,64 @@ Download a YouTube video.
 }
 ```
 
-### GET /api/serve/[filename]
+### GET `/api/serve/[filename]`
 
-Download the video file to your device.
+Download the processed video file to your device.
 
-## Environment Variables
+## 🔗 Supported URL Formats
+
+| Format | Example |
+|--------|---------|
+| Standard | `https://www.youtube.com/watch?v=VIDEO_ID` |
+| Short URL | `https://youtu.be/VIDEO_ID` |
+| Shorts | `https://www.youtube.com/shorts/VIDEO_ID` |
+| Mobile | `https://m.youtube.com/watch?v=VIDEO_ID` |
+
+## ⚙️ Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DOWNLOAD_DIR` | Directory for downloaded files | `/tmp` |
 | `MAX_DURATION` | Max video duration (seconds) | `3600` |
 
-## Troubleshooting
+## 🛠️ Tech Stack
 
-### "yt-dlp is not installed"
-- Ensure yt-dlp is in your PATH
-- On Vercel, the postinstall script should download it automatically
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Video Processing:** yt-dlp + ffmpeg
+- **Deployment:** Docker
 
-### "Video is private"
-- Only public and unlisted videos can be downloaded
-- Private videos require authentication (not supported)
+## 📁 Project Structure
 
-### "Download timeout"
-- Vercel has a 60-second limit
-- Use GCP Cloud Run for longer videos
-- Reduce video quality if needed
+```
+├── app/
+│   ├── api/
+│   │   ├── download/route.ts    # POST API endpoint
+│   │   └── serve/[filename]/    # File serving endpoint
+│   ├── page.tsx                 # Main UI
+│   └── layout.tsx
+├── lib/
+│   ├── validator.ts             # URL validation
+│   ├── downloader.ts            # yt-dlp wrapper
+│   └── errors.ts                # Error handling
+├── Dockerfile                   # Production container
+└── railway.json                 # Railway config
+```
 
-### "Age-restricted video"
-- Age-restricted videos require authentication
-- Not supported in this tool
+## ⚠️ Troubleshooting
 
-## Supported URL Formats
+| Issue | Solution |
+|-------|----------|
+| "yt-dlp not found" | Install yt-dlp and ensure it's in PATH |
+| "Video is private" | Only public/unlisted videos supported |
+| "Download timeout" | Video may be too long, check MAX_DURATION |
+| Corrupt video file | Ensure ffmpeg is installed for proper encoding |
 
-- `https://www.youtube.com/watch?v=VIDEO_ID`
-- `https://youtube.com/watch?v=VIDEO_ID`
-- `https://youtu.be/VIDEO_ID`
-- `https://www.youtube.com/shorts/VIDEO_ID`
-- `https://youtube.com/shorts/VIDEO_ID`
+## 📄 License
 
-## License
+Internal use only. Not for public distribution.
 
-Internal use only.
+---
+
+Built with ❤️ by JARS Team
