@@ -97,12 +97,14 @@ async function checkYtdlp(): Promise<string | null> {
   }
 }
 
-// Common yt-dlp args to bypass bot detection
+// Common yt-dlp args to bypass bot detection on cloud servers
 const YTDLP_COMMON_ARGS = [
   '--no-check-certificates',
-  '--no-warnings',
-  '--extractor-args', '"youtube:player_client=android"',
-  '--user-agent', '"Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36"',
+  '--no-warnings', 
+  '--extractor-args', 'youtube:player_client=ios,player_skip=webpage',
+  '--add-header', 'Accept-Language:en-US,en;q=0.9',
+  '--geo-bypass',
+  '--ignore-errors',
 ].join(' ');
 
 export async function probeVideo(url: string): Promise<DownloadResult> {
