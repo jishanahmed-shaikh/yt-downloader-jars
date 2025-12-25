@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { BatchInput } from '@/components/batch-input';
 import { DownloadQueue } from '@/components/download-queue';
@@ -57,6 +57,39 @@ export default function Home() {
     setResult(null);
     setFormat('video');
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'v':
+            if (e.target === document.body) {
+              e.preventDefault();
+              navigator.clipboard.readText().then(text => {
+                if (text.includes('youtube.com') || text.includes('youtu.be')) {
+                  setUrl(text);
+                }
+              });
+            }
+            break;
+          case 'Enter':
+            if (!loading && url.trim()) {
+              e.preventDefault();
+              handleDownload();
+            }
+            break;
+          case 'r':
+            e.preventDefault();
+            handleReset();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [loading, url, handleDownload]);
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -204,9 +237,14 @@ export default function Home() {
           <DownloadHistory />
 
           {/* Footer */}
-          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8">
-            Internal tool for testing purposes only. Supports YouTube videos, Shorts, and playlists.
-          </p>
+          <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 space-y-2">
+            <p>Internal tool for testing purposes only. Supports YouTube videos, Shorts, and playlists.</p>
+            <p>
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd> Auto-paste URL •{' '}
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> Download •{' '}
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd> Reset
+            </p>
+          </div>
         </div>
       </div>
     </main>
