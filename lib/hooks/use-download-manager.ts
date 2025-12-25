@@ -3,11 +3,25 @@
 import { useState, useCallback } from 'react';
 import { downloadStore } from '@/lib/download-store';
 
+import { validateYouTubeUrl } from '@/lib/validator';
+
+function isPlaylistUrl(url: string): boolean {
+  return url.includes('playlist?list=') || url.includes('&list=');
+}
+
 export function useDownloadManager() {
   const [loading, setLoading] = useState(false);
 
   const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio') => {
     setLoading(true);
+    
+    // Check if it's a playlist URL
+    if (isPlaylistUrl(url)) {
+      await downloadBatch([url], format);
+      setLoading(false);
+      return;
+    }
+    
     const id = downloadStore.addToQueue(url, format);
     
     try {
