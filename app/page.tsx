@@ -62,10 +62,10 @@ export default function Home() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !loading) {
-      handleDownload();
-    }
+  const handleReset = () => {
+    setUrl('');
+    setResult(null);
+    setFormat('video');
   };
 
   return (
@@ -113,7 +113,7 @@ export default function Home() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={(e) => e.key === 'Enter' && !loading && handleDownload()}
               placeholder="https://www.youtube.com/watch?v=..."
               className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700"
               disabled={loading}
@@ -136,6 +136,16 @@ export default function Home() {
               )}
             </button>
           </div>
+
+          {/* Reset Button */}
+          {(url || result) && !loading && (
+            <button
+              onClick={handleReset}
+              className="mt-3 w-full py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              🔄 Reset & Download Another
+            </button>
+          )}
         </div>
 
         {result && (
