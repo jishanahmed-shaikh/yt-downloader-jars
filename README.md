@@ -16,7 +16,7 @@ A powerful, feature-rich YouTube downloader with advanced batch processing, play
 - 🎼 **Playlist Support** - Download entire YouTube playlists
 - ✅ **Auto-validation** - Automatic public/unlisted video detection
 
-### � Adevanced Features
+### 🚀 Advanced Features
 - 📊 **Real-time Progress Bars** - Individual progress tracking for each download
 - 📥 **Automatic Downloads** - Browser save dialogs appear automatically
 - 🎛️ **Auto-Download Toggle** - Enable/disable automatic downloads
@@ -38,7 +38,7 @@ A powerful, feature-rich YouTube downloader with advanced batch processing, play
 - 💾 **Local Storage** - Persistent settings and history
 - 🎨 **Modern UI** - Clean, minimal design with Tailwind CSS
 
-## �️ Preview
+## 🖼️ Preview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
