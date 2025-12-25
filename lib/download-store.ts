@@ -6,6 +6,7 @@ class DownloadStore {
   private queue: DownloadItem[] = [];
   private history: DownloadHistory[] = [];
   private listeners: Set<() => void> = new Set();
+  private autoDownload: boolean = true; // Default to auto-download enabled
 
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -14,6 +15,27 @@ class DownloadStore {
 
   private notify() {
     this.listeners.forEach(listener => listener());
+  }
+
+  setAutoDownload(enabled: boolean) {
+    this.autoDownload = enabled;
+    localStorage.setItem('auto-download', JSON.stringify(enabled));
+    this.notify();
+  }
+
+  getAutoDownload(): boolean {
+    return this.autoDownload;
+  }
+
+  loadSettings() {
+    try {
+      const autoDownloadSetting = localStorage.getItem('auto-download');
+      if (autoDownloadSetting !== null) {
+        this.autoDownload = JSON.parse(autoDownloadSetting);
+      }
+    } catch (error) {
+      console.error('Failed to load auto-download setting:', error);
+    }
   }
 
   addToQueue(url: string, format: 'video' | 'audio'): string {

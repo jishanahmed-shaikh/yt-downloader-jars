@@ -6,6 +6,7 @@ import { BatchInput } from '@/components/batch-input';
 import { DownloadQueue } from '@/components/download-queue';
 import { DownloadHistory } from '@/components/download-history';
 import { useDownloadManager } from '@/lib/hooks/use-download-manager';
+import { downloadStore } from '@/lib/download-store';
 
 interface DownloadResponse {
   success: boolean;
@@ -40,7 +41,22 @@ export default function Home() {
   const [url, setUrl] = useState('');
   const [format, setFormat] = useState<'video' | 'audio'>('video');
   const [result, setResult] = useState<DownloadResponse | null>(null);
+  const [autoDownload, setAutoDownload] = useState(true);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
+
+  // Load auto-download setting on mount
+  useEffect(() => {
+    downloadStore.loadSettings();
+    setAutoDownload(downloadStore.getAutoDownload());
+    
+    const unsubscribe = downloadStore.subscribe(() => {
+      setAutoDownload(downloadStore.getAutoDownload());
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const handleDownload = async () => {
     if (!url.trim()) return;
@@ -115,11 +131,34 @@ export default function Home() {
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               Download videos, audio, playlists, and manage your downloads
             </p>
-            <div className="flex justify-center gap-4 text-sm text-gray-400 dark:text-gray-500">
+            <div className="flex justify-center gap-4 text-sm text-gray-400 dark:text-gray-500 mb-4">
               <span>✅ Videos & Shorts</span>
               <span>✅ Audio Extraction</span>
               <span>✅ Batch Downloads</span>
               <span>✅ Playlist Support</span>
+            </div>
+            
+            {/* Auto-Download Toggle */}
+            <div className="flex justify-center items-center gap-2 text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Auto-download files:</span>
+              <button
+                onClick={() => {
+                  const newValue = !autoDownload;
+                  downloadStore.setAutoDownload(newValue);
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  autoDownload ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    autoDownload ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {autoDownload ? 'ON' : 'OFF'}
+              </span>
             </div>
           </div>
 

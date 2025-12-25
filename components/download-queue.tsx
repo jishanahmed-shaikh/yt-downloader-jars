@@ -102,6 +102,23 @@ export function DownloadQueue() {
                     {formatBytes(item.size)}
                   </span>
                 )}
+                {item.status === 'completed' && item.filename && (
+                  <a
+                    href={`/api/serve/${encodeURIComponent(item.filename)}`}
+                    download={item.filename}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    onClick={(e) => {
+                      // Also trigger programmatic download
+                      e.preventDefault();
+                      const link = document.createElement('a');
+                      link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
+                      link.download = item.filename;
+                      link.click();
+                    }}
+                  >
+                    📥 Download
+                  </a>
+                )}
               </div>
 
               {item.status === 'downloading' && (

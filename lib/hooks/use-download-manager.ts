@@ -6,6 +6,17 @@ import { downloadStore } from '@/lib/download-store';
 export function useDownloadManager() {
   const [loading, setLoading] = useState(false);
 
+  // Function to automatically trigger download
+  const triggerDownload = (filename: string, title: string) => {
+    const link = document.createElement('a');
+    link.href = `/api/serve/${encodeURIComponent(filename)}`;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio') => {
     setLoading(true);
     
@@ -42,6 +53,11 @@ export function useDownloadManager() {
           thumbnail: result.thumbnail,
         });
         downloadStore.completeDownload(id, result);
+        
+        // Automatically trigger download
+        if (result.filename && downloadStore.getAutoDownload()) {
+          setTimeout(() => triggerDownload(result.filename, result.title), 500);
+        }
       } else {
         downloadStore.updateStatus(id, 'error', {
           error: result.error?.message || 'Download failed',
@@ -99,6 +115,11 @@ export function useDownloadManager() {
                 thumbnail: item.data.thumbnail,
               });
               downloadStore.completeDownload(id, item.data);
+              
+              // Automatically trigger download with delay to avoid overwhelming browser
+              if (item.data.filename && downloadStore.getAutoDownload()) {
+                setTimeout(() => triggerDownload(item.data.filename, item.data.title), 1000 + (index * 2000));
+              }
             }
           } else {
             // Handle failed download
@@ -164,6 +185,11 @@ export function useDownloadManager() {
             thumbnail: result.thumbnail,
           });
           downloadStore.completeDownload(id, result);
+          
+          // Automatically trigger download with delay
+          if (result.filename && downloadStore.getAutoDownload()) {
+            setTimeout(() => triggerDownload(result.filename, result.title), 1000 + (i * 2000));
+          }
         } else {
           downloadStore.updateStatus(id, 'error', {
             error: result.error?.message || 'Download failed',
@@ -219,6 +245,11 @@ export function useDownloadManager() {
               thumbnail: result.thumbnail,
             });
             downloadStore.completeDownload(item.id, result);
+            
+            // Automatically trigger download
+            if (result.filename && downloadStore.getAutoDownload()) {
+              setTimeout(() => triggerDownload(result.filename, result.title), 500);
+            }
           } else {
             downloadStore.updateStatus(item.id, 'error', {
               error: result.error?.message || 'Download failed',
