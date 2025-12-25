@@ -97,16 +97,6 @@ async function checkYtdlp(): Promise<string | null> {
   }
 }
 
-// Common yt-dlp args to bypass bot detection on cloud servers
-const YTDLP_COMMON_ARGS = [
-  '--no-check-certificates',
-  '--no-warnings', 
-  '--extractor-args', 'youtube:player_client=ios,player_skip=webpage',
-  '--add-header', 'Accept-Language:en-US,en;q=0.9',
-  '--geo-bypass',
-  '--ignore-errors',
-].join(' ');
-
 export async function probeVideo(url: string): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
@@ -118,7 +108,7 @@ export async function probeVideo(url: string): Promise<DownloadResult> {
 
   try {
     const { stdout, stderr } = await execAsync(
-      `"${ytdlpPath}" --dump-json --no-download ${YTDLP_COMMON_ARGS} "${url}"`,
+      `"${ytdlpPath}" --dump-json --no-download --no-warnings "${url}"`,
       { timeout: 30000 }
     );
 
@@ -187,7 +177,7 @@ export async function downloadVideo(url: string, videoId: string): Promise<Downl
     const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
     
     // Download best quality and merge to MP4 for universal compatibility
-    const command = `"${ytdlpPath}" ${ffmpegArg} ${YTDLP_COMMON_ARGS} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" --merge-output-format mp4 -o "${filepath}" "${url}"`;
+    const command = `"${ytdlpPath}" ${ffmpegArg} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" --merge-output-format mp4 -o "${filepath}" --no-warnings "${url}"`;
     
     console.log('Running command:', command);
     await execAsync(command, { timeout: 300000 }); // 5 minute timeout
@@ -215,6 +205,62 @@ export async function downloadVideo(url: string, videoId: string): Promise<Downl
     return {
       success: false,
       error: createError('DOWNLOAD_FAILED', 'Failed to download video', err.message),
+    };
+  }
+}
+
+export async function downloadAudio(url: string, videoId: string): Promise<DownloadResult> {
+  const ytdlpPath = await checkYtdlp();
+  if (!ytdlpPath) {
+    return {
+      success: false,
+      error: createError('YTDLP_NOT_FOUND', 'yt-dlp is not installed on the server'),
+    };
+  }
+
+  const probeResult = await probeVideo(url);
+  if (!probeResult.success || !probeResult.data) {
+    return probeResult;
+  }
+
+  const { title, duration, thumbnail } = probeResult.data;
+  const safeFilename = `${sanitizeFilename(title)}_${videoId}.mp3`;
+  const downloadDir = getDownloadDir();
+  const filepath = path.join(downloadDir, safeFilename);
+
+  try {
+    const ffmpegDir = getFfmpegLocation();
+    const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
+    
+    // Download audio only and convert to MP3
+    const command = `"${ytdlpPath}" ${ffmpegArg} -x --audio-format mp3 --audio-quality 0 -o "${filepath.replace('.mp3', '.%(ext)s')}" --no-warnings "${url}"`;
+    
+    console.log('Running audio command:', command);
+    await execAsync(command, { timeout: 300000 });
+
+    // Get file size
+    const stats = fs.statSync(filepath);
+
+    return {
+      success: true,
+      data: {
+        title,
+        duration,
+        filename: safeFilename,
+        filepath,
+        size: stats.size,
+        videoId,
+        thumbnail,
+      },
+    };
+  } catch (error: unknown) {
+    const err = error as { stderr?: string; message?: string };
+    if (err.stderr) {
+      return { success: false, error: parseYtdlpError(err.stderr) };
+    }
+    return {
+      success: false,
+      error: createError('DOWNLOAD_FAILED', 'Failed to download audio', err.message),
     };
   }
 }
