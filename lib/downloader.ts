@@ -264,3 +264,59 @@ export async function downloadAudio(url: string, videoId: string): Promise<Downl
     };
   }
 }
+export async function getPlaylistInfo(url: string): Promise<{ success: boolean; data?: any; error?: any }> {
+  const ytdlpPath = await checkYtdlp();
+  if (!ytdlpPath) {
+    return {
+      success: false,
+      error: createError('YTDLP_NOT_FOUND', 'yt-dlp is not installed on the server'),
+    };
+  }
+
+  try {
+    const { stdout, stderr } = await execAsync(
+      `"${ytdlpPath}" --flat-playlist --dump-json --no-warnings "${url}"`,
+      { timeout: 60000 }
+    );
+
+    if (stderr && !stdout) {
+      return { success: false, error: parseYtdlpError(stderr) };
+    }
+
+    const lines = stdout.trim().split('\n').filter(line => line.trim());
+    const videos = lines.map(line => {
+      try {
+        const info = JSON.parse(line);
+        return {
+          id: info.id,
+          title: info.title || 'Unknown Title',
+          url: `https://www.youtube.com/watch?v=${info.id}`,
+          thumbnail: info.thumbnail || '',
+          duration: info.duration || 0,
+        };
+      } catch {
+        return null;
+      }
+    }).filter(Boolean);
+
+    if (videos.length === 0) {
+      return { success: false, error: createError('INVALID_URL', 'No videos found in playlist') };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: Math.random().toString(36).substr(2, 9),
+        title: `Playlist (${videos.length} videos)`,
+        videoCount: videos.length,
+        videos,
+      },
+    };
+  } catch (error: unknown) {
+    const err = error as { stderr?: string; message?: string };
+    return {
+      success: false,
+      error: createError('PROBE_FAILED', 'Failed to get playlist info', err.message),
+    };
+  }
+}
