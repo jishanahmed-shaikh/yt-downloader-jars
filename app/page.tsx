@@ -70,6 +70,8 @@ export default function Home() {
                 if (text.includes('youtube.com') || text.includes('youtu.be')) {
                   setUrl(text);
                 }
+              }).catch(() => {
+                // Clipboard access denied, ignore
               });
             }
             break;
@@ -91,6 +93,14 @@ export default function Home() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [loading, url, handleDownload]);
 
+  // Auto-focus input on mount
+  useEffect(() => {
+    const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+    if (input) {
+      input.focus();
+    }
+  }, []);
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <ThemeToggle />
@@ -102,9 +112,15 @@ export default function Home() {
             <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
               🎬 YouTube Downloader
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Download videos, audio, playlists, and manage your downloads
             </p>
+            <div className="flex justify-center gap-4 text-sm text-gray-400 dark:text-gray-500">
+              <span>✅ Videos & Shorts</span>
+              <span>✅ Audio Extraction</span>
+              <span>✅ Batch Downloads</span>
+              <span>✅ Playlist Support</span>
+            </div>
           </div>
 
           {/* Batch Download */}
