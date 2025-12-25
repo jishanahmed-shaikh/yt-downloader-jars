@@ -13,11 +13,22 @@ export function useDownloadManager() {
     try {
       downloadStore.updateStatus(id, 'downloading');
       
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        const currentItem = downloadStore.getQueue().find(item => item.id === id);
+        if (currentItem && currentItem.progress < 90) {
+          downloadStore.updateProgress(id, Math.min(currentItem.progress + Math.random() * 20, 90));
+        }
+      }, 500);
+      
       const response = await fetch('/api/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
       });
+
+      clearInterval(progressInterval);
+      downloadStore.updateProgress(id, 100);
 
       const result = await response.json();
       
