@@ -3,24 +3,11 @@
 import { useState, useCallback } from 'react';
 import { downloadStore } from '@/lib/download-store';
 
-import { validateYouTubeUrl } from '@/lib/validator';
-
-function isPlaylistUrl(url: string): boolean {
-  return url.includes('playlist?list=') || url.includes('&list=');
-}
-
 export function useDownloadManager() {
   const [loading, setLoading] = useState(false);
 
   const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio') => {
     setLoading(true);
-    
-    // Check if it's a playlist URL
-    if (isPlaylistUrl(url)) {
-      await downloadBatch([url], format);
-      setLoading(false);
-      return;
-    }
     
     const id = downloadStore.addToQueue(url, format);
     
@@ -72,105 +59,129 @@ export function useDownloadManager() {
   const downloadBatch = useCallback(async (urls: string[], format: 'video' | 'audio') => {
     setLoading(true);
     
-    // Add all URLs to queue first
+    try {
+      // Use the batch-download API for better handling of playlists and multiple URLs
+      const response = await fetch('/api/batch-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls, format }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success && result.results) {
+        // Process each result and add to queue
+        result.results.forEach((item: any, index: number) => {
+          const id = downloadStore.addToQueue(urls[index], format);
+          
+          if (item.success) {
+            if (item.type === 'playlist' && item.data) {
+              // Handle playlist - mark main item as completed and add individual videos
+              downloadStore.updateStatus(id, 'completed', {
+                title: `${item.data.title} (${item.data.videoCount} videos)`,
+              });
+              
+              // Add each video from playlist to queue as pending
+              item.data.videos.forEach((video: any, videoIndex: number) => {
+                const videoId = downloadStore.addToQueue(video.url, format);
+                downloadStore.updateStatus(videoId, 'pending', {
+                  title: `${videoIndex + 1}. ${video.title}`,
+                  thumbnail: video.thumbnail,
+                });
+              });
+            } else if (item.type === 'video' && item.data) {
+              // Handle regular video - mark as completed
+              downloadStore.updateStatus(id, 'completed', {
+                title: item.data.title,
+                filename: item.data.filename,
+                size: item.data.size,
+                duration: item.data.duration,
+                thumbnail: item.data.thumbnail,
+              });
+              downloadStore.completeDownload(id, item.data);
+            }
+          } else {
+            // Handle failed download
+            downloadStore.updateStatus(id, 'error', {
+              error: item.error?.message || 'Download failed',
+            });
+          }
+        });
+      } else {
+        // If batch API fails, fall back to individual processing
+        console.log('Batch API failed, falling back to individual processing');
+        await processBatchIndividually(urls, format);
+      }
+    } catch (error) {
+      console.error('Batch download error:', error);
+      // Fall back to individual processing
+      await processBatchIndividually(urls, format);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fallback function to process URLs individually
+  const processBatchIndividually = async (urls: string[], format: 'video' | 'audio') => {
     const queueIds: string[] = [];
     urls.forEach(url => {
       const id = downloadStore.addToQueue(url, format);
       queueIds.push(id);
     });
     
-    try {
-      // Process each URL individually with progress tracking
-      for (let i = 0; i < urls.length; i++) {
-        const url = urls[i];
-        const id = queueIds[i];
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      const id = queueIds[i];
+      
+      try {
+        downloadStore.updateStatus(id, 'downloading');
         
-        try {
-          downloadStore.updateStatus(id, 'downloading');
-          
-          // Check if it's a playlist
-          if (isPlaylistUrl(url)) {
-            const response = await fetch('/api/batch-download', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ urls: [url], format }),
-            });
-
-            const result = await response.json();
-            
-            if (result.success && result.results?.[0]?.success && result.results[0].type === 'playlist') {
-              const playlistData = result.results[0].data;
-              
-              // Update original item to show playlist info
-              downloadStore.updateStatus(id, 'completed', {
-                title: `${playlistData.title} (${playlistData.videoCount} videos)`,
-              });
-              
-              // Add each video from playlist to queue
-              playlistData.videos.forEach((video: any, index: number) => {
-                const videoId = downloadStore.addToQueue(video.url, format);
-                downloadStore.updateStatus(videoId, 'pending', {
-                  title: `${index + 1}. ${video.title}`,
-                  thumbnail: video.thumbnail,
-                });
-              });
-            } else {
-              downloadStore.updateStatus(id, 'error', {
-                error: 'Failed to process playlist',
-              });
-            }
-          } else {
-            // Regular video download with progress simulation
-            const progressInterval = setInterval(() => {
-              const currentItem = downloadStore.getQueue().find(item => item.id === id);
-              if (currentItem && currentItem.progress < 90) {
-                downloadStore.updateProgress(id, Math.min(currentItem.progress + Math.random() * 15, 90));
-              }
-            }, 300);
-            
-            const response = await fetch('/api/download', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url, format }),
-            });
-
-            clearInterval(progressInterval);
-            downloadStore.updateProgress(id, 100);
-
-            const result = await response.json();
-            
-            if (result.success) {
-              downloadStore.updateStatus(id, 'completed', {
-                title: result.title,
-                filename: result.filename,
-                size: result.size,
-                duration: result.duration,
-                thumbnail: result.thumbnail,
-              });
-              downloadStore.completeDownload(id, result);
-            } else {
-              downloadStore.updateStatus(id, 'error', {
-                error: result.error?.message || 'Download failed',
-              });
-            }
+        // Progress simulation for better UX
+        const progressInterval = setInterval(() => {
+          const currentItem = downloadStore.getQueue().find(item => item.id === id);
+          if (currentItem && currentItem.progress < 90) {
+            downloadStore.updateProgress(id, Math.min(currentItem.progress + Math.random() * 15, 90));
           }
-        } catch (error) {
+        }, 300);
+        
+        const response = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, format }),
+        });
+
+        clearInterval(progressInterval);
+        downloadStore.updateProgress(id, 100);
+
+        const result = await response.json();
+        
+        if (result.success) {
+          downloadStore.updateStatus(id, 'completed', {
+            title: result.title,
+            filename: result.filename,
+            size: result.size,
+            duration: result.duration,
+            thumbnail: result.thumbnail,
+          });
+          downloadStore.completeDownload(id, result);
+        } else {
           downloadStore.updateStatus(id, 'error', {
-            error: 'Network error occurred',
+            error: result.error?.message || 'Download failed',
           });
         }
-        
-        // Small delay between downloads to prevent overwhelming the server
-        if (i < urls.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      } catch (error) {
+        console.error('Error downloading URL:', url, error);
+        downloadStore.updateStatus(id, 'error', {
+          error: 'Network error occurred',
+        });
       }
-    } catch (error) {
-      console.error('Batch download error:', error);
-    } finally {
-      setLoading(false);
+      
+      // Small delay between downloads to prevent overwhelming the server
+      if (i < urls.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
-  }, []);
+  };
 
   const processPendingDownloads = useCallback(async () => {
     const queue = downloadStore.getQueue();
