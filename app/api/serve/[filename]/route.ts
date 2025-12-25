@@ -51,10 +51,13 @@ export async function GET(
 
     // Clean filename for Content-Disposition
     const safeFilename = filename.replace(/[^\w\-_.]/g, '_');
+    
+    // Determine content type based on file extension
+    const contentType = filename.endsWith('.mp3') ? 'audio/mpeg' : 'video/mp4';
 
     return new NextResponse(readableStream, {
       headers: {
-        'Content-Type': 'video/mp4',
+        'Content-Type': contentType,
         'Content-Length': stats.size.toString(),
         'Content-Disposition': `attachment; filename="${safeFilename}"`,
         'Cache-Control': 'no-cache',
