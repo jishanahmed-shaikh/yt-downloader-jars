@@ -172,12 +172,6 @@ export function useDownloadManager() {
     }
   }, []);
 
-  return {
-    loading,
-    downloadSingle,
-    downloadBatch,
-  };
-}
   const processPendingDownloads = useCallback(async () => {
     const queue = downloadStore.getQueue();
     const pendingItems = queue.filter(item => item.status === 'pending');
