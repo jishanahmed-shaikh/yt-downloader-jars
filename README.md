@@ -378,4 +378,4 @@ Internal use only. Not for public distribution.
 
 ---
 
-Built with ❤️ by JARS Team | [GitHub Repository](https://github.com/jishanahmed-shaikh/yt-downloader-jars)
+Built with ❤️ by JISHANAHMED AR SHAIKH | [LinkedIn](https://www.linkedin.com/in/jishanahmedshaikh/)
