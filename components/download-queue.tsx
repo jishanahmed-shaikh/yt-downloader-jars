@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { downloadStore } from '@/lib/download-store';
 import { DownloadItem } from '@/lib/types';
+import { useDownloadManager } from '@/lib/hooks/use-download-manager';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
@@ -34,6 +35,7 @@ function getStatusColor(status: DownloadItem['status']) {
 
 export function DownloadQueue() {
   const [queue, setQueue] = useState<DownloadItem[]>([]);
+  const { processPendingDownloads } = useDownloadManager();
 
   useEffect(() => {
     const unsubscribe = downloadStore.subscribe(() => {
@@ -47,18 +49,30 @@ export function DownloadQueue() {
     return null;
   }
 
+  const pendingCount = queue.filter(item => item.status === 'pending').length;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
           Download Queue ({queue.length})
         </h3>
-        <button
-          onClick={() => downloadStore.clearCompleted()}
-          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          Clear Completed
-        </button>
+        <div className="flex gap-2">
+          {pendingCount > 0 && (
+            <button
+              onClick={processPendingDownloads}
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Process {pendingCount} Pending
+            </button>
+          )}
+          <button
+            onClick={() => downloadStore.clearCompleted()}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            Clear Completed
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3 max-h-64 overflow-y-auto">

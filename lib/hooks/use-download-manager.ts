@@ -72,47 +72,98 @@ export function useDownloadManager() {
   const downloadBatch = useCallback(async (urls: string[], format: 'video' | 'audio') => {
     setLoading(true);
     
+    // Add all URLs to queue first
+    const queueIds: string[] = [];
+    urls.forEach(url => {
+      const id = downloadStore.addToQueue(url, format);
+      queueIds.push(id);
+    });
+    
     try {
-      const response = await fetch('/api/batch-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls, format }),
-      });
-
-      const result = await response.json();
-      
-      if (result.success && result.results) {
-        // Process each result
-        result.results.forEach((item: any) => {
-          const id = downloadStore.addToQueue(item.url, format);
+      // Process each URL individually with progress tracking
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        const id = queueIds[i];
+        
+        try {
+          downloadStore.updateStatus(id, 'downloading');
           
-          if (item.success) {
-            if (item.type === 'playlist') {
+          // Check if it's a playlist
+          if (isPlaylistUrl(url)) {
+            const response = await fetch('/api/batch-download', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ urls: [url], format }),
+            });
+
+            const result = await response.json();
+            
+            if (result.success && result.results?.[0]?.success && result.results[0].type === 'playlist') {
+              const playlistData = result.results[0].data;
+              
+              // Update original item to show playlist info
+              downloadStore.updateStatus(id, 'completed', {
+                title: `${playlistData.title} (${playlistData.videoCount} videos)`,
+              });
+              
               // Add each video from playlist to queue
-              item.data.videos.forEach((video: any) => {
+              playlistData.videos.forEach((video: any, index: number) => {
                 const videoId = downloadStore.addToQueue(video.url, format);
                 downloadStore.updateStatus(videoId, 'pending', {
-                  title: video.title,
+                  title: `${index + 1}. ${video.title}`,
                   thumbnail: video.thumbnail,
                 });
               });
-              downloadStore.removeFromQueue(id); // Remove playlist entry
             } else {
-              downloadStore.updateStatus(id, 'completed', {
-                title: item.data.title,
-                filename: item.data.filename,
-                size: item.data.size,
-                duration: item.data.duration,
-                thumbnail: item.data.thumbnail,
+              downloadStore.updateStatus(id, 'error', {
+                error: 'Failed to process playlist',
               });
-              downloadStore.completeDownload(id, item.data);
             }
           } else {
-            downloadStore.updateStatus(id, 'error', {
-              error: item.error?.message || 'Download failed',
+            // Regular video download with progress simulation
+            const progressInterval = setInterval(() => {
+              const currentItem = downloadStore.getQueue().find(item => item.id === id);
+              if (currentItem && currentItem.progress < 90) {
+                downloadStore.updateProgress(id, Math.min(currentItem.progress + Math.random() * 15, 90));
+              }
+            }, 300);
+            
+            const response = await fetch('/api/download', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url, format }),
             });
+
+            clearInterval(progressInterval);
+            downloadStore.updateProgress(id, 100);
+
+            const result = await response.json();
+            
+            if (result.success) {
+              downloadStore.updateStatus(id, 'completed', {
+                title: result.title,
+                filename: result.filename,
+                size: result.size,
+                duration: result.duration,
+                thumbnail: result.thumbnail,
+              });
+              downloadStore.completeDownload(id, result);
+            } else {
+              downloadStore.updateStatus(id, 'error', {
+                error: result.error?.message || 'Download failed',
+              });
+            }
           }
-        });
+        } catch (error) {
+          downloadStore.updateStatus(id, 'error', {
+            error: 'Network error occurred',
+          });
+        }
+        
+        // Small delay between downloads to prevent overwhelming the server
+        if (i < urls.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
     } catch (error) {
       console.error('Batch download error:', error);
@@ -125,5 +176,65 @@ export function useDownloadManager() {
     loading,
     downloadSingle,
     downloadBatch,
+  };
+}
+  const processPendingDownloads = useCallback(async () => {
+    const queue = downloadStore.getQueue();
+    const pendingItems = queue.filter(item => item.status === 'pending');
+    
+    for (const item of pendingItems) {
+      if (item.status === 'pending') {
+        try {
+          downloadStore.updateStatus(item.id, 'downloading');
+          
+          const progressInterval = setInterval(() => {
+            const currentItem = downloadStore.getQueue().find(i => i.id === item.id);
+            if (currentItem && currentItem.progress < 90) {
+              downloadStore.updateProgress(item.id, Math.min(currentItem.progress + Math.random() * 10, 90));
+            }
+          }, 400);
+          
+          const response = await fetch('/api/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: item.url, format: item.format }),
+          });
+
+          clearInterval(progressInterval);
+          downloadStore.updateProgress(item.id, 100);
+
+          const result = await response.json();
+          
+          if (result.success) {
+            downloadStore.updateStatus(item.id, 'completed', {
+              title: result.title,
+              filename: result.filename,
+              size: result.size,
+              duration: result.duration,
+              thumbnail: result.thumbnail,
+            });
+            downloadStore.completeDownload(item.id, result);
+          } else {
+            downloadStore.updateStatus(item.id, 'error', {
+              error: result.error?.message || 'Download failed',
+            });
+          }
+        } catch (error) {
+          downloadStore.updateStatus(item.id, 'error', {
+            error: 'Network error occurred',
+          });
+        }
+        
+        // Delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }, []);
+
+  return {
+    loading,
+    downloadSingle,
+    downloadBatch,
+    processPendingDownloads,
   };
 }
