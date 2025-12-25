@@ -33,6 +33,7 @@ function formatDuration(seconds: number): string {
 
 export default function Home() {
   const [url, setUrl] = useState('');
+  const [format, setFormat] = useState<'video' | 'audio'>('video');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DownloadResponse | null>(null);
 
@@ -46,12 +47,12 @@ export default function Home() {
       const response = await fetch('/api/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), format }),
       });
 
       const data: DownloadResponse = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch {
       setResult({
         success: false,
         error: { code: 'NETWORK_ERROR', message: 'Failed to connect to server' },
@@ -75,11 +76,38 @@ export default function Home() {
             YouTube Downloader
           </h1>
           <p className="text-gray-500">
-            Paste a YouTube URL to download the video
+            Paste a YouTube URL to download video or audio
           </p>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          {/* Format Toggle */}
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex rounded-lg border border-gray-200 p-1">
+              <button
+                onClick={() => setFormat('video')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  format === 'video'
+                    ? 'bg-red-600 text-white'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🎬 Video (MP4)
+              </button>
+              <button
+                onClick={() => setFormat('audio')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  format === 'audio'
+                    ? 'bg-red-600 text-white'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🎵 Audio (MP3)
+              </button>
+            </div>
+          </div>
+
+          {/* URL Input */}
           <div className="flex gap-3">
             <input
               type="text"
@@ -127,6 +155,7 @@ export default function Home() {
                     <div className="text-sm text-gray-500 space-y-1">
                       <p>Duration: {formatDuration(result.duration || 0)}</p>
                       <p>Size: {formatBytes(result.size || 0)}</p>
+                      <p>Format: {result.filename?.endsWith('.mp3') ? '🎵 MP3 Audio' : '🎬 MP4 Video'}</p>
                     </div>
                   </div>
                 </div>
