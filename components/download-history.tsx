@@ -44,6 +44,34 @@ export function DownloadHistory() {
     item.filename.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const exportHistory = (format: 'csv' | 'json') => {
+    if (format === 'csv') {
+      const csvContent = [
+        'Title,URL,Format,Filename,Size (MB),Duration (seconds),Downloaded At',
+        ...filteredHistory.map(item => 
+          `"${item.title}","${item.url}","${item.format}","${item.filename}",${(item.size / 1024 / 1024).toFixed(2)},${item.duration},"${item.downloadedAt.toISOString()}"`
+        )
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `download-history-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const jsonContent = JSON.stringify(filteredHistory, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `download-history-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   if (history.length === 0) {
     return null;
   }
@@ -71,13 +99,31 @@ export function DownloadHistory() {
         <div className="px-6 pb-6">
           {/* Search Input */}
           <div className="mb-4">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="🔍 Search downloads..."
-              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="🔍 Search downloads..."
+                className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+              />
+              <div className="flex gap-1">
+                <button
+                  onClick={() => exportHistory('csv')}
+                  className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="Export as CSV"
+                >
+                  📊 CSV
+                </button>
+                <button
+                  onClick={() => exportHistory('json')}
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  title="Export as JSON"
+                >
+                  📄 JSON
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 max-h-80 overflow-y-auto">
