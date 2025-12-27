@@ -117,21 +117,40 @@ export function DownloadQueue() {
                   </span>
                 )}
                 {item.status === 'completed' && item.filename && (
-                  <a
-                    href={`/api/serve/${encodeURIComponent(item.filename)}`}
-                    download={item.filename}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                    onClick={(e) => {
-                      // Also trigger programmatic download
-                      e.preventDefault();
-                      const link = document.createElement('a');
-                      link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
-                      link.download = item.filename;
-                      link.click();
-                    }}
-                  >
-                    📥 Download
-                  </a>
+                  <div className="flex gap-2">
+                    <a
+                      href={`/api/serve/${encodeURIComponent(item.filename)}`}
+                      download={item.filename}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      onClick={(e) => {
+                        // Also trigger programmatic download
+                        e.preventDefault();
+                        const link = document.createElement('a');
+                        link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
+                        link.download = item.filename;
+                        link.click();
+                      }}
+                    >
+                      📥 Download
+                    </a>
+                    <button
+                      onClick={() => {
+                        const downloadUrl = `${window.location.origin}/api/serve/${encodeURIComponent(item.filename)}`;
+                        navigator.clipboard.writeText(downloadUrl).then(() => {
+                          // Show temporary feedback
+                          const button = document.activeElement as HTMLButtonElement;
+                          const originalText = button.textContent;
+                          button.textContent = '✅ Copied!';
+                          setTimeout(() => {
+                            button.textContent = originalText;
+                          }, 2000);
+                        });
+                      }}
+                      className="text-xs text-green-600 dark:text-green-400 hover:underline"
+                    >
+                      🔗 Copy Link
+                    </button>
+                  </div>
                 )}
               </div>
 
