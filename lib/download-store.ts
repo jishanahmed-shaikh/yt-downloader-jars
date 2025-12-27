@@ -39,6 +39,33 @@ class DownloadStore {
   }
 
   addToQueue(url: string, format: 'video' | 'audio', quality?: string): string {
+    // Check for duplicates in queue
+    const existingInQueue = this.queue.find(item => 
+      item.url === url && item.format === format && item.quality === quality
+    );
+    
+    if (existingInQueue) {
+      // Return existing ID instead of creating duplicate
+      return existingInQueue.id;
+    }
+    
+    // Check for duplicates in recent history (last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentDuplicate = this.history.find(item =>
+      item.url === url && item.format === format && item.downloadedAt > oneDayAgo
+    );
+    
+    if (recentDuplicate) {
+      // Show notification about duplicate
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Duplicate Download Detected! 🔄', {
+          body: `"${recentDuplicate.title}" was downloaded recently`,
+          icon: '/favicon.ico',
+          tag: 'duplicate-download'
+        });
+      }
+    }
+    
     const id = Math.random().toString(36).substr(2, 9);
     const item: DownloadItem = {
       id,
