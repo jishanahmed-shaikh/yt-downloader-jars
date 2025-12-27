@@ -1,10 +1,28 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { downloadStore } from '@/lib/download-store';
 
 export function useDownloadManager() {
   const [loading, setLoading] = useState(false);
+
+  // Function to show browser notification
+  const showNotification = (title: string, filename: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Download Complete! 🎉', {
+        body: `${title} has finished downloading`,
+        icon: '/favicon.ico',
+        tag: 'download-complete'
+      });
+    }
+  };
+
+  // Request notification permission on first load
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   // Function to automatically trigger download
   const triggerDownload = (filename: string, title: string) => {
@@ -57,6 +75,11 @@ export function useDownloadManager() {
         // Automatically trigger download
         if (result.filename && downloadStore.getAutoDownload()) {
           setTimeout(() => triggerDownload(result.filename, result.title), 500);
+        }
+        
+        // Show notification
+        if (result.title) {
+          showNotification(result.title, result.filename || '');
         }
       } else {
         downloadStore.updateStatus(id, 'error', {
@@ -119,6 +142,11 @@ export function useDownloadManager() {
               // Automatically trigger download with delay to avoid overwhelming browser
               if (item.data.filename && downloadStore.getAutoDownload()) {
                 setTimeout(() => triggerDownload(item.data.filename, item.data.title), 1000 + (index * 2000));
+              }
+              
+              // Show notification
+              if (item.data.title) {
+                setTimeout(() => showNotification(item.data.title, item.data.filename || ''), 1000 + (index * 2000));
               }
             }
           } else {
@@ -190,6 +218,11 @@ export function useDownloadManager() {
           if (result.filename && downloadStore.getAutoDownload()) {
             setTimeout(() => triggerDownload(result.filename, result.title), 1000 + (i * 2000));
           }
+          
+          // Show notification
+          if (result.title) {
+            setTimeout(() => showNotification(result.title, result.filename || ''), 1000 + (i * 2000));
+          }
         } else {
           downloadStore.updateStatus(id, 'error', {
             error: result.error?.message || 'Download failed',
@@ -249,6 +282,11 @@ export function useDownloadManager() {
             // Automatically trigger download
             if (result.filename && downloadStore.getAutoDownload()) {
               setTimeout(() => triggerDownload(result.filename, result.title), 500);
+            }
+            
+            // Show notification
+            if (result.title) {
+              showNotification(result.title, result.filename || '');
             }
           } else {
             downloadStore.updateStatus(item.id, 'error', {
