@@ -105,6 +105,11 @@ export function DownloadQueue() {
                 <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300">
                   {item.format.toUpperCase()}
                 </span>
+                {item.quality && item.quality !== 'best' && (
+                  <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 rounded text-purple-600 dark:text-purple-300">
+                    {item.quality === 'worst' ? 'FAST' : `${item.quality}P`}
+                  </span>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
