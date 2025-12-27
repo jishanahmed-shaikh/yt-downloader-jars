@@ -152,6 +152,17 @@ export function DownloadQueue() {
                     </button>
                   </div>
                 )}
+                {item.status === 'error' && (
+                  <button
+                    onClick={() => {
+                      // Retry download
+                      downloadStore.updateStatus(item.id, 'pending');
+                    }}
+                    className="text-xs text-orange-600 dark:text-orange-400 hover:underline"
+                  >
+                    🔄 Retry
+                  </button>
+                )}
               </div>
 
               {item.status === 'downloading' && (
