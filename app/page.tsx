@@ -203,6 +203,24 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Download Options */}
+            <div className="flex justify-center gap-4 mb-4">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                📝 Download Subtitles
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                🖼️ Download Thumbnail
+              </label>
+            </div>
+
             {/* Quality Selection */}
             {format === 'video' && (
               <div className="flex justify-center mb-4">
