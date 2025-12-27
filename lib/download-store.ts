@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadItem, DownloadHistory } from './types';
+import { DownloadItem, DownloadHistory, DownloadStats } from './types';
 
 class DownloadStore {
   private queue: DownloadItem[] = [];
@@ -136,6 +136,29 @@ class DownloadStore {
 
   getHistory(): DownloadHistory[] {
     return [...this.history];
+  }
+
+  getStats(): DownloadStats {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const totalDownloads = this.history.length;
+    const totalDataDownloaded = this.history.reduce((sum, item) => sum + item.size, 0);
+    const todayDownloads = this.history.filter(item => 
+      item.downloadedAt >= today
+    ).length;
+    
+    const videoDownloads = this.history.filter(item => item.format === 'video').length;
+    const audioDownloads = this.history.filter(item => item.format === 'audio').length;
+    
+    return {
+      totalDownloads,
+      totalDataDownloaded,
+      successRate: 100, // We only store successful downloads in history
+      averageFileSize: totalDownloads > 0 ? totalDataDownloaded / totalDownloads : 0,
+      mostDownloadedFormat: videoDownloads >= audioDownloads ? 'video' : 'audio',
+      todayDownloads,
+    };
   }
 
   loadHistory() {

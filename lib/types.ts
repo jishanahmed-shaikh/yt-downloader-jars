@@ -28,6 +28,15 @@ export interface DownloadHistory {
   downloadedAt: Date;
 }
 
+export interface DownloadStats {
+  totalDownloads: number;
+  totalDataDownloaded: number; // bytes
+  successRate: number; // percentage
+  averageFileSize: number; // bytes
+  mostDownloadedFormat: 'video' | 'audio';
+  todayDownloads: number;
+}
+
 export interface PlaylistInfo {
   id: string;
   title: string;
