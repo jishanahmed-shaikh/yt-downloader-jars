@@ -40,6 +40,7 @@ function formatDuration(seconds: number): string {
 export default function Home() {
   const [url, setUrl] = useState('');
   const [format, setFormat] = useState<'video' | 'audio'>('video');
+  const [quality, setQuality] = useState('best');
   const [result, setResult] = useState<DownloadResponse | null>(null);
   const [autoDownload, setAutoDownload] = useState(true);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
@@ -61,17 +62,18 @@ export default function Home() {
   const handleDownload = async () => {
     if (!url.trim()) return;
     setResult(null);
-    await downloadSingle(url.trim(), format);
+    await downloadSingle(url.trim(), format, quality);
   };
 
-  const handleBatchDownload = async (urls: string[], batchFormat: 'video' | 'audio') => {
-    await downloadBatch(urls, batchFormat);
+  const handleBatchDownload = async (urls: string[], batchFormat: 'video' | 'audio', batchQuality: string) => {
+    await downloadBatch(urls, batchFormat, batchQuality);
   };
 
   const handleReset = () => {
     setUrl('');
     setResult(null);
     setFormat('video');
+    setQuality('best');
   };
 
   // Keyboard shortcuts
@@ -199,6 +201,26 @@ export default function Home() {
                 </button>
               </div>
             </div>
+
+            {/* Quality Selection */}
+            {format === 'video' && (
+              <div className="flex justify-center mb-4">
+                <select
+                  value={quality}
+                  onChange={(e) => setQuality(e.target.value)}
+                  className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+                >
+                  <option value="best">🏆 Best Quality</option>
+                  <option value="2160">📺 4K (2160p)</option>
+                  <option value="1440">📺 2K (1440p)</option>
+                  <option value="1080">📺 Full HD (1080p)</option>
+                  <option value="720">📺 HD (720p)</option>
+                  <option value="480">📺 SD (480p)</option>
+                  <option value="360">📺 Low (360p)</option>
+                  <option value="worst">⚡ Fastest (Lowest)</option>
+                </select>
+              </div>
+            )}
 
             {/* URL Input */}
             <div className="flex gap-3">

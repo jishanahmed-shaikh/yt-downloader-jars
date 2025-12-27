@@ -152,7 +152,7 @@ export async function probeVideo(url: string): Promise<DownloadResult> {
   }
 }
 
-export async function downloadVideo(url: string, videoId: string): Promise<DownloadResult> {
+export async function downloadVideo(url: string, videoId: string, quality: string = 'best'): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
     return {
@@ -176,8 +176,18 @@ export async function downloadVideo(url: string, videoId: string): Promise<Downl
     const ffmpegDir = getFfmpegLocation();
     const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
     
-    // Download best quality and merge to MP4 for universal compatibility
-    const command = `"${ytdlpPath}" ${ffmpegArg} -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" --merge-output-format mp4 -o "${filepath}" --no-warnings "${url}"`;
+    // Build quality format string
+    let formatString = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best';
+    
+    if (quality !== 'best' && quality !== 'worst') {
+      // Specific quality requested (e.g., '1080', '720')
+      formatString = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]`;
+    } else if (quality === 'worst') {
+      formatString = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worstvideo+worstaudio/worst';
+    }
+    
+    // Download with specified quality and merge to MP4 for universal compatibility
+    const command = `"${ytdlpPath}" ${ffmpegArg} -f "${formatString}" --merge-output-format mp4 -o "${filepath}" --no-warnings "${url}"`;
     
     console.log('Running command:', command);
     await execAsync(command, { timeout: 300000 }); // 5 minute timeout
@@ -209,7 +219,7 @@ export async function downloadVideo(url: string, videoId: string): Promise<Downl
   }
 }
 
-export async function downloadAudio(url: string, videoId: string): Promise<DownloadResult> {
+export async function downloadAudio(url: string, videoId: string, quality: string = 'best'): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
     return {

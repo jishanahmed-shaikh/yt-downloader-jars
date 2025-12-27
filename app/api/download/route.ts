@@ -8,12 +8,13 @@ export const maxDuration = 60; // Vercel serverless timeout
 interface DownloadRequest {
   url: string;
   format?: 'video' | 'audio';
+  quality?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: DownloadRequest = await request.json();
-    const { url, format = 'video' } = body;
+    const { url, format = 'video', quality = 'best' } = body;
 
     if (!url) {
       return NextResponse.json(
@@ -39,8 +40,8 @@ export async function POST(request: NextRequest) {
 
     // Download video or audio based on format
     const result = format === 'audio' 
-      ? await downloadAudio(url, validation.videoId)
-      : await downloadVideo(url, validation.videoId);
+      ? await downloadAudio(url, validation.videoId, quality)
+      : await downloadVideo(url, validation.videoId, quality);
 
     if (!result.success) {
       const statusCode = result.error?.code === 'PRIVATE_VIDEO' || 

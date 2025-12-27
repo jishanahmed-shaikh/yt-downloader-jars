@@ -38,12 +38,13 @@ class DownloadStore {
     }
   }
 
-  addToQueue(url: string, format: 'video' | 'audio'): string {
+  addToQueue(url: string, format: 'video' | 'audio', quality?: string): string {
     const id = Math.random().toString(36).substr(2, 9);
     const item: DownloadItem = {
       id,
       url,
       format,
+      quality,
       status: 'pending',
       progress: 0,
       createdAt: new Date(),

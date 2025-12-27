@@ -17,10 +17,10 @@ export function useDownloadManager() {
     document.body.removeChild(link);
   };
 
-  const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio') => {
+  const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio', quality: string = 'best') => {
     setLoading(true);
     
-    const id = downloadStore.addToQueue(url, format);
+    const id = downloadStore.addToQueue(url, format, quality);
     
     try {
       downloadStore.updateStatus(id, 'downloading');
@@ -36,7 +36,7 @@ export function useDownloadManager() {
       const response = await fetch('/api/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, format }),
+        body: JSON.stringify({ url, format, quality }),
       });
 
       clearInterval(progressInterval);
@@ -72,7 +72,7 @@ export function useDownloadManager() {
     }
   }, []);
 
-  const downloadBatch = useCallback(async (urls: string[], format: 'video' | 'audio') => {
+  const downloadBatch = useCallback(async (urls: string[], format: 'video' | 'audio', quality: string = 'best') => {
     setLoading(true);
     
     try {
@@ -80,7 +80,7 @@ export function useDownloadManager() {
       const response = await fetch('/api/batch-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls, format }),
+        body: JSON.stringify({ urls, format, quality }),
       });
 
       const result = await response.json();
@@ -99,7 +99,7 @@ export function useDownloadManager() {
               
               // Add each video from playlist to queue as pending
               item.data.videos.forEach((video: any, videoIndex: number) => {
-                const videoId = downloadStore.addToQueue(video.url, format);
+                const videoId = downloadStore.addToQueue(video.url, format, quality);
                 downloadStore.updateStatus(videoId, 'pending', {
                   title: `${videoIndex + 1}. ${video.title}`,
                   thumbnail: video.thumbnail,
@@ -131,22 +131,22 @@ export function useDownloadManager() {
       } else {
         // If batch API fails, fall back to individual processing
         console.log('Batch API failed, falling back to individual processing');
-        await processBatchIndividually(urls, format);
+        await processBatchIndividually(urls, format, quality);
       }
     } catch (error) {
       console.error('Batch download error:', error);
       // Fall back to individual processing
-      await processBatchIndividually(urls, format);
+      await processBatchIndividually(urls, format, quality);
     } finally {
       setLoading(false);
     }
   }, []);
 
   // Fallback function to process URLs individually
-  const processBatchIndividually = async (urls: string[], format: 'video' | 'audio') => {
+  const processBatchIndividually = async (urls: string[], format: 'video' | 'audio', quality: string) => {
     const queueIds: string[] = [];
     urls.forEach(url => {
-      const id = downloadStore.addToQueue(url, format);
+      const id = downloadStore.addToQueue(url, format, quality);
       queueIds.push(id);
     });
     
@@ -168,7 +168,7 @@ export function useDownloadManager() {
         const response = await fetch('/api/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, format }),
+          body: JSON.stringify({ url, format, quality }),
         });
 
         clearInterval(progressInterval);

@@ -2,6 +2,7 @@ export interface DownloadItem {
   id: string;
   url: string;
   format: 'video' | 'audio';
+  quality?: string; // video quality like '720p', '1080p', 'best'
   status: 'pending' | 'downloading' | 'completed' | 'error';
   progress: number;
   title?: string;

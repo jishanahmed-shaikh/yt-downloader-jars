@@ -3,13 +3,14 @@
 import { useState } from 'react';
 
 interface BatchInputProps {
-  onBatchSubmit: (urls: string[], format: 'video' | 'audio') => void;
+  onBatchSubmit: (urls: string[], format: 'video' | 'audio', quality: string) => void;
   loading: boolean;
 }
 
 export function BatchInput({ onBatchSubmit, loading }: BatchInputProps) {
   const [batchText, setBatchText] = useState('');
   const [format, setFormat] = useState<'video' | 'audio'>('video');
+  const [quality, setQuality] = useState('best');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = () => {
@@ -19,7 +20,7 @@ export function BatchInput({ onBatchSubmit, loading }: BatchInputProps) {
       .filter(url => url.length > 0);
     
     if (urls.length > 0) {
-      onBatchSubmit(urls, format);
+      onBatchSubmit(urls, format, quality);
       setBatchText('');
       setIsOpen(false);
     }
@@ -78,6 +79,26 @@ export function BatchInput({ onBatchSubmit, loading }: BatchInputProps) {
               </button>
             </div>
           </div>
+
+          {/* Quality Selection */}
+          {format === 'video' && (
+            <div className="flex justify-center mb-4">
+              <select
+                value={quality}
+                onChange={(e) => setQuality(e.target.value)}
+                className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+              >
+                <option value="best">🏆 Best Quality</option>
+                <option value="2160">📺 4K (2160p)</option>
+                <option value="1440">📺 2K (1440p)</option>
+                <option value="1080">📺 Full HD (1080p)</option>
+                <option value="720">📺 HD (720p)</option>
+                <option value="480">📺 SD (480p)</option>
+                <option value="360">📺 Low (360p)</option>
+                <option value="worst">⚡ Fastest (Lowest)</option>
+              </select>
+            </div>
+          )}
 
           {/* Batch Input */}
           <textarea
