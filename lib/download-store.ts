@@ -56,7 +56,21 @@ class DownloadStore {
   updateProgress(id: string, progress: number) {
     const item = this.queue.find(i => i.id === id);
     if (item) {
+      const now = new Date();
       item.progress = progress;
+      
+      // Calculate download speed and ETA
+      if (item.startTime && item.size) {
+        const elapsedSeconds = (now.getTime() - item.startTime.getTime()) / 1000;
+        const downloadedBytes = (progress / 100) * item.size;
+        item.downloadSpeed = downloadedBytes / elapsedSeconds;
+        
+        if (progress > 0 && progress < 100) {
+          const remainingBytes = item.size - downloadedBytes;
+          item.eta = remainingBytes / item.downloadSpeed;
+        }
+      }
+      
       this.notify();
     }
   }
@@ -65,6 +79,12 @@ class DownloadStore {
     const item = this.queue.find(i => i.id === id);
     if (item) {
       item.status = status;
+      
+      // Set start time when download begins
+      if (status === 'downloading' && !item.startTime) {
+        item.startTime = new Date();
+      }
+      
       if (data) {
         Object.assign(item, data);
       }

@@ -11,6 +11,9 @@ export interface DownloadItem {
   duration?: number;
   error?: string;
   createdAt: Date;
+  downloadSpeed?: number; // bytes per second
+  eta?: number; // estimated time remaining in seconds
+  startTime?: Date;
 }
 
 export interface DownloadHistory {

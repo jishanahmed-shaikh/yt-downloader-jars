@@ -13,6 +13,20 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+function formatSpeed(bytesPerSecond: number): string {
+  if (bytesPerSecond === 0) return '0 B/s';
+  const k = 1024;
+  const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+  const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k));
+  return parseFloat((bytesPerSecond / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatETA(seconds: number): string {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  return `${Math.round(seconds / 3600)}h`;
+}
+
 function getStatusIcon(status: DownloadItem['status']) {
   switch (status) {
     case 'pending': return '⏳';
@@ -129,9 +143,19 @@ export function DownloadQueue() {
                       style={{ width: `${item.progress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {item.progress}%
-                  </span>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.progress}%
+                    </span>
+                    <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      {item.downloadSpeed && (
+                        <span>{formatSpeed(item.downloadSpeed)}</span>
+                      )}
+                      {item.eta && (
+                        <span>ETA: {formatETA(item.eta)}</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
