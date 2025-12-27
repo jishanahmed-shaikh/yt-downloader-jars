@@ -6,6 +6,7 @@ import { BatchInput } from '@/components/batch-input';
 import { DownloadQueue } from '@/components/download-queue';
 import { DownloadHistory } from '@/components/download-history';
 import { DownloadStats } from '@/components/download-stats';
+import { QuickActions } from '@/components/quick-actions';
 import { useDownloadManager } from '@/lib/hooks/use-download-manager';
 import { downloadStore } from '@/lib/download-store';
 
@@ -387,6 +388,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+      
+      {/* Quick Actions Menu */}
+      <QuickActions />
     </main>
   );
 }
