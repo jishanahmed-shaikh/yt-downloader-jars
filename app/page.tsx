@@ -44,15 +44,18 @@ export default function Home() {
   const [quality, setQuality] = useState('best');
   const [result, setResult] = useState<DownloadResponse | null>(null);
   const [autoDownload, setAutoDownload] = useState(true);
+  const [bandwidthLimit, setBandwidthLimit] = useState(0);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
 
   // Load auto-download setting on mount
   useEffect(() => {
     downloadStore.loadSettings();
     setAutoDownload(downloadStore.getAutoDownload());
+    setBandwidthLimit(downloadStore.getBandwidthLimit());
     
     const unsubscribe = downloadStore.subscribe(() => {
       setAutoDownload(downloadStore.getAutoDownload());
+      setBandwidthLimit(downloadStore.getBandwidthLimit());
     });
     
     return () => {
@@ -142,7 +145,7 @@ export default function Home() {
             </div>
             
             {/* Auto-Download Toggle */}
-            <div className="flex justify-center items-center gap-2 text-sm">
+            <div className="flex justify-center items-center gap-2 text-sm mb-2">
               <span className="text-gray-600 dark:text-gray-400">Auto-download files:</span>
               <button
                 onClick={() => {
@@ -162,6 +165,22 @@ export default function Home() {
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {autoDownload ? 'ON' : 'OFF'}
               </span>
+            </div>
+            
+            {/* Bandwidth Limit */}
+            <div className="flex justify-center items-center gap-2 text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Speed limit:</span>
+              <select
+                value={bandwidthLimit}
+                onChange={(e) => downloadStore.setBandwidthLimit(Number(e.target.value))}
+                className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+              >
+                <option value={0}>🚀 Unlimited</option>
+                <option value={100}>🐌 100 KB/s</option>
+                <option value={500}>🚶 500 KB/s</option>
+                <option value={1000}>🏃 1 MB/s</option>
+                <option value={5000}>🏎️ 5 MB/s</option>
+              </select>
             </div>
           </div>
 

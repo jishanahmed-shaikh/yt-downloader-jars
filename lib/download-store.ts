@@ -7,6 +7,7 @@ class DownloadStore {
   private history: DownloadHistory[] = [];
   private listeners: Set<() => void> = new Set();
   private autoDownload: boolean = true; // Default to auto-download enabled
+  private bandwidthLimit: number = 0; // 0 = unlimited, otherwise KB/s
 
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -27,14 +28,29 @@ class DownloadStore {
     return this.autoDownload;
   }
 
+  setBandwidthLimit(limitKBps: number) {
+    this.bandwidthLimit = limitKBps;
+    localStorage.setItem('bandwidth-limit', JSON.stringify(limitKBps));
+    this.notify();
+  }
+
+  getBandwidthLimit(): number {
+    return this.bandwidthLimit;
+  }
+
   loadSettings() {
     try {
       const autoDownloadSetting = localStorage.getItem('auto-download');
       if (autoDownloadSetting !== null) {
         this.autoDownload = JSON.parse(autoDownloadSetting);
       }
+      
+      const bandwidthSetting = localStorage.getItem('bandwidth-limit');
+      if (bandwidthSetting !== null) {
+        this.bandwidthLimit = JSON.parse(bandwidthSetting);
+      }
     } catch (error) {
-      console.error('Failed to load auto-download setting:', error);
+      console.error('Failed to load settings:', error);
     }
   }
 
