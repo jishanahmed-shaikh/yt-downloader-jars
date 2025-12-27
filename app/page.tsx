@@ -107,6 +107,22 @@ export default function Home() {
             e.preventDefault();
             handleReset();
             break;
+          case 'b':
+            e.preventDefault();
+            // Toggle batch input
+            const batchSection = document.querySelector('[data-batch-input]') as HTMLElement;
+            if (batchSection) {
+              batchSection.click();
+            }
+            break;
+          case 'h':
+            e.preventDefault();
+            // Toggle history
+            const historySection = document.querySelector('[data-history]') as HTMLElement;
+            if (historySection) {
+              historySection.click();
+            }
+            break;
         }
       }
     };
@@ -185,7 +201,9 @@ export default function Home() {
           </div>
 
           {/* Batch Download */}
-          <BatchInput onBatchSubmit={handleBatchDownload} loading={loading} />
+          <div data-batch-input>
+            <BatchInput onBatchSubmit={handleBatchDownload} loading={loading} />
+          </div>
 
           {/* Download Queue */}
           <DownloadQueue />
@@ -352,7 +370,9 @@ export default function Home() {
           <DownloadStats />
 
           {/* Download History */}
-          <DownloadHistory />
+          <div data-history>
+            <DownloadHistory />
+          </div>
 
           {/* Footer */}
           <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 space-y-2">
@@ -360,7 +380,9 @@ export default function Home() {
             <p>
               <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd> Auto-paste URL •{' '}
               <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> Download •{' '}
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd> Reset
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd> Reset •{' '}
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd> Batch •{' '}
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+H</kbd> History
             </p>
           </div>
         </div>
