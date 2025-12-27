@@ -28,6 +28,7 @@ function formatDate(date: Date): string {
 export function DownloadHistory() {
   const [history, setHistory] = useState<DownloadHistory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     downloadStore.loadHistory();
@@ -37,6 +38,11 @@ export function DownloadHistory() {
     setHistory(downloadStore.getHistory());
     return unsubscribe;
   }, []);
+
+  const filteredHistory = history.filter(item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.filename.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (history.length === 0) {
     return null;
@@ -63,8 +69,24 @@ export function DownloadHistory() {
 
       {isOpen && (
         <div className="px-6 pb-6">
+          {/* Search Input */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="🔍 Search downloads..."
+              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+            />
+          </div>
+
           <div className="space-y-3 max-h-80 overflow-y-auto">
-            {history.map((item) => (
+            {filteredHistory.length === 0 ? (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                {searchTerm ? 'No downloads match your search' : 'No downloads yet'}
+              </div>
+            ) : (
+              filteredHistory.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
@@ -101,7 +123,7 @@ export function DownloadHistory() {
                   </svg>
                 </a>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
