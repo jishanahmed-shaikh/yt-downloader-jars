@@ -11,6 +11,7 @@ import { QuickActions } from '@/components/quick-actions';
 import { ClipboardNotification } from '@/components/clipboard-notification';
 import { useDownloadManager } from '@/lib/hooks/use-download-manager';
 import { useClipboardMonitor } from '@/lib/hooks/use-clipboard-monitor';
+import { useTouchGestures } from '@/lib/hooks/use-touch-gestures';
 import { downloadStore } from '@/lib/download-store';
 
 interface DownloadResponse {
@@ -52,6 +53,28 @@ export default function Home() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
   const { clipboardUrl, showNotification, useClipboardUrl, dismissNotification } = useClipboardMonitor();
+
+  // Touch gestures for mobile
+  const mainRef = useTouchGestures({
+    onSwipeLeft: () => {
+      // Swipe left to toggle format
+      setFormat(format === 'video' ? 'audio' : 'video');
+    },
+    onSwipeRight: () => {
+      // Swipe right to reset form
+      handleReset();
+    },
+    onSwipeUp: () => {
+      // Swipe up to scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    onDoubleTap: () => {
+      // Double tap to download
+      if (url.trim() && !loading) {
+        handleDownload();
+      }
+    },
+  });
 
   // Load auto-download setting on mount
   useEffect(() => {
@@ -148,7 +171,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <main ref={mainRef} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <ThemeToggle />
       
       <div className="container mx-auto px-4 py-8">
@@ -166,6 +189,11 @@ export default function Home() {
               <span>✅ Audio Extraction</span>
               <span>✅ Batch Downloads</span>
               <span>✅ Playlist Support</span>
+            </div>
+            
+            {/* Mobile Gesture Hints */}
+            <div className="block md:hidden text-xs text-gray-400 dark:text-gray-500 space-y-1">
+              <p>📱 Touch Gestures: Swipe ← → to change format • Double tap to download • Swipe ↑ to scroll top</p>
             </div>
             
             {/* Auto-Download Toggle */}
@@ -427,6 +455,9 @@ export default function Home() {
               <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd> Batch •{' '}
               <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+H</kbd> History
             </p>
+            <div className="block md:hidden mt-2 text-xs text-gray-400 dark:text-gray-500">
+              <p>📱 Mobile: Swipe gestures enabled for quick actions</p>
+            </div>
           </div>
         </div>
       </div>
