@@ -8,6 +8,8 @@ class DownloadStore {
   private listeners: Set<() => void> = new Set();
   private autoDownload: boolean = true; // Default to auto-download enabled
   private bandwidthLimit: number = 0; // 0 = unlimited, otherwise KB/s
+  private autoRefresh: boolean = true; // Auto-refresh queue
+  private refreshInterval: NodeJS.Timeout | null = null;
 
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -26,6 +28,43 @@ class DownloadStore {
 
   getAutoDownload(): boolean {
     return this.autoDownload;
+  }
+
+  setAutoRefresh(enabled: boolean) {
+    this.autoRefresh = enabled;
+    localStorage.setItem('auto-refresh', JSON.stringify(enabled));
+    
+    if (enabled) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+    this.notify();
+  }
+
+  getAutoRefresh(): boolean {
+    return this.autoRefresh;
+  }
+
+  private startAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+    
+    this.refreshInterval = setInterval(() => {
+      const pendingItems = this.queue.filter(item => item.status === 'pending');
+      if (pendingItems.length > 0) {
+        // Trigger refresh notification
+        this.notify();
+      }
+    }, 5000); // Check every 5 seconds
+  }
+
+  private stopAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
   }
 
   setBandwidthLimit(limitKBps: number) {
@@ -48,6 +87,16 @@ class DownloadStore {
       const bandwidthSetting = localStorage.getItem('bandwidth-limit');
       if (bandwidthSetting !== null) {
         this.bandwidthLimit = JSON.parse(bandwidthSetting);
+      }
+      
+      const autoRefreshSetting = localStorage.getItem('auto-refresh');
+      if (autoRefreshSetting !== null) {
+        this.autoRefresh = JSON.parse(autoRefreshSetting);
+        if (this.autoRefresh) {
+          this.startAutoRefresh();
+        }
+      } else {
+        this.startAutoRefresh(); // Default enabled
       }
     } catch (error) {
       console.error('Failed to load settings:', error);

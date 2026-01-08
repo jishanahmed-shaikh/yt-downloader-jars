@@ -46,6 +46,7 @@ export default function Home() {
   const [result, setResult] = useState<DownloadResponse | null>(null);
   const [autoDownload, setAutoDownload] = useState(true);
   const [bandwidthLimit, setBandwidthLimit] = useState(0);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
 
   // Load auto-download setting on mount
@@ -53,10 +54,12 @@ export default function Home() {
     downloadStore.loadSettings();
     setAutoDownload(downloadStore.getAutoDownload());
     setBandwidthLimit(downloadStore.getBandwidthLimit());
+    setAutoRefresh(downloadStore.getAutoRefresh());
     
     const unsubscribe = downloadStore.subscribe(() => {
       setAutoDownload(downloadStore.getAutoDownload());
       setBandwidthLimit(downloadStore.getBandwidthLimit());
+      setAutoRefresh(downloadStore.getAutoRefresh());
     });
     
     return () => {
@@ -181,6 +184,29 @@ export default function Home() {
               </button>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {autoDownload ? 'ON' : 'OFF'}
+              </span>
+            </div>
+            
+            {/* Auto-Refresh Toggle */}
+            <div className="flex justify-center items-center gap-2 text-sm mb-2">
+              <span className="text-gray-600 dark:text-gray-400">Auto-refresh queue:</span>
+              <button
+                onClick={() => {
+                  const newValue = !autoRefresh;
+                  downloadStore.setAutoRefresh(newValue);
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  autoRefresh ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    autoRefresh ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {autoRefresh ? 'ON' : 'OFF'}
               </span>
             </div>
             
