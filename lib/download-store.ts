@@ -1,10 +1,11 @@
 'use client';
 
-import { DownloadItem, DownloadHistory, DownloadStats } from './types';
+import { DownloadItem, DownloadHistory, DownloadStats, DownloadPreset } from './types';
 
 class DownloadStore {
   private queue: DownloadItem[] = [];
   private history: DownloadHistory[] = [];
+  private presets: DownloadPreset[] = [];
   private listeners: Set<() => void> = new Set();
   private autoDownload: boolean = true; // Default to auto-download enabled
   private bandwidthLimit: number = 0; // 0 = unlimited, otherwise KB/s
@@ -77,7 +78,48 @@ class DownloadStore {
     return this.bandwidthLimit;
   }
 
+  savePreset(name: string, format: 'video' | 'audio', quality: string, autoDownload: boolean): string {
+    const preset: DownloadPreset = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      format,
+      quality,
+      autoDownload,
+      createdAt: new Date(),
+    };
+    
+    this.presets.push(preset);
+    localStorage.setItem('download-presets', JSON.stringify(this.presets));
+    this.notify();
+    return preset.id;
+  }
+
+  getPresets(): DownloadPreset[] {
+    return [...this.presets];
+  }
+
+  deletePreset(id: string) {
+    this.presets = this.presets.filter(preset => preset.id !== id);
+    localStorage.setItem('download-presets', JSON.stringify(this.presets));
+    this.notify();
+  }
+
+  loadPresets() {
+    try {
+      const stored = localStorage.getItem('download-presets');
+      if (stored) {
+        this.presets = JSON.parse(stored).map((preset: any) => ({
+          ...preset,
+          createdAt: new Date(preset.createdAt),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load presets:', error);
+    }
+  }
+
   loadSettings() {
+    this.loadPresets();
     try {
       const autoDownloadSetting = localStorage.getItem('auto-download');
       if (autoDownloadSetting !== null) {

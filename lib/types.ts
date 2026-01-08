@@ -28,6 +28,15 @@ export interface DownloadHistory {
   downloadedAt: Date;
 }
 
+export interface DownloadPreset {
+  id: string;
+  name: string;
+  format: 'video' | 'audio';
+  quality: string;
+  autoDownload: boolean;
+  createdAt: Date;
+}
+
 export interface DownloadStats {
   totalDownloads: number;
   totalDataDownloaded: number; // bytes

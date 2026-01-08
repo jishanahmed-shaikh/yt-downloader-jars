@@ -6,6 +6,7 @@ import { BatchInput } from '@/components/batch-input';
 import { DownloadQueue } from '@/components/download-queue';
 import { DownloadHistory } from '@/components/download-history';
 import { DownloadStats } from '@/components/download-stats';
+import { DownloadPresets } from '@/components/download-presets';
 import { QuickActions } from '@/components/quick-actions';
 import { ClipboardNotification } from '@/components/clipboard-notification';
 import { useDownloadManager } from '@/lib/hooks/use-download-manager';
@@ -229,6 +230,18 @@ export default function Home() {
               </select>
             </div>
           </div>
+
+          {/* Download Presets */}
+          <DownloadPresets
+            onApplyPreset={(preset) => {
+              setFormat(preset.format);
+              setQuality(preset.quality);
+              downloadStore.setAutoDownload(preset.autoDownload);
+            }}
+            currentFormat={format}
+            currentQuality={quality}
+            currentAutoDownload={autoDownload}
+          />
 
           {/* Batch Download */}
           <div data-batch-input>
