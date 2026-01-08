@@ -7,7 +7,9 @@ import { DownloadQueue } from '@/components/download-queue';
 import { DownloadHistory } from '@/components/download-history';
 import { DownloadStats } from '@/components/download-stats';
 import { QuickActions } from '@/components/quick-actions';
+import { ClipboardNotification } from '@/components/clipboard-notification';
 import { useDownloadManager } from '@/lib/hooks/use-download-manager';
+import { useClipboardMonitor } from '@/lib/hooks/use-clipboard-monitor';
 import { downloadStore } from '@/lib/download-store';
 
 interface DownloadResponse {
@@ -48,6 +50,7 @@ export default function Home() {
   const [bandwidthLimit, setBandwidthLimit] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
+  const { clipboardUrl, showNotification, useClipboardUrl, dismissNotification } = useClipboardMonitor();
 
   // Load auto-download setting on mount
   useEffect(() => {
@@ -414,6 +417,20 @@ export default function Home() {
           </div>
         </div>
       </div>
+      
+      {/* Clipboard Notification */}
+      {showNotification && clipboardUrl && (
+        <ClipboardNotification
+          url={clipboardUrl}
+          onUse={() => {
+            const url = useClipboardUrl();
+            if (url) {
+              setUrl(url);
+            }
+          }}
+          onDismiss={dismissNotification}
+        />
+      )}
       
       {/* Quick Actions Menu */}
       <QuickActions />
