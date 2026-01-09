@@ -483,13 +483,18 @@ export default function Home() {
           {/* Footer */}
           <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 space-y-2">
             <p>Internal tool for testing purposes only. Supports YouTube videos, Shorts, and playlists.</p>
-            <p>
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd> Auto-paste URL •{' '}
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> Download •{' '}
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd> Reset •{' '}
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd> Batch •{' '}
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+H</kbd> History
-            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd>
+              <span className="text-gray-300">Auto-paste URL</span>
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd>
+              <span className="text-gray-300">Download</span>
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd>
+              <span className="text-gray-300">Reset</span>
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd>
+              <span className="text-gray-300">Batch</span>
+              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+H</kbd>
+              <span className="text-gray-300">History</span>
+            </div>
             <div className="block md:hidden mt-2 text-xs text-gray-400 dark:text-gray-500">
               <p>📱 Mobile: Swipe gestures enabled for quick actions</p>
             </div>
