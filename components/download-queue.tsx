@@ -98,7 +98,14 @@ export function DownloadQueue() {
             <span className="text-lg">{getStatusIcon(item.status)}</span>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              {item.status === 'pending' && !item.title ? (
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                   {item.title || 'Processing...'}
                 </span>
