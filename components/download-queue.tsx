@@ -27,6 +27,19 @@ function formatETA(seconds: number): string {
   return `${Math.round(seconds / 3600)}h`;
 }
 
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
 function getStatusIcon(status: DownloadItem['status']) {
   switch (status) {
     case 'pending': return '⏳';
@@ -123,9 +136,12 @@ export function DownloadQueue() {
                 <span className={`text-xs ${getStatusColor(item.status)}`}>
                   {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                 </span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  • {formatTimeAgo(item.createdAt)}
+                </span>
                 {item.size && (
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatBytes(item.size)}
+                    • {formatBytes(item.size)}
                   </span>
                 )}
                 {item.status === 'completed' && item.filename && (
