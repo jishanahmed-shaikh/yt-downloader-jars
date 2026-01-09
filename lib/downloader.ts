@@ -31,7 +31,7 @@ interface YtdlpInfo {
   filesize_approx?: number;
 }
 
-const MAX_DURATION = parseInt(process.env.MAX_DURATION || '3600', 10);
+const MAX_DURATION = parseInt(process.env.MAX_DURATION || '7200', 10); // 2 hours default
 
 function getDownloadDir(): string {
   const dir = process.env.DOWNLOAD_DIR || '/tmp';
