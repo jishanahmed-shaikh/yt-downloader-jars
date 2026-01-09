@@ -99,6 +99,16 @@ export function DownloadQueue() {
           >
             Clear Completed
           </button>
+          <button
+            onClick={() => {
+              if (confirm('Clear entire queue? This will remove all items.')) {
+                queue.forEach(item => downloadStore.removeFromQueue(item.id));
+              }
+            }}
+            className="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+          >
+            Clear All
+          </button>
         </div>
       </div>
 
