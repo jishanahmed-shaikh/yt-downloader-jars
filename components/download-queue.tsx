@@ -200,6 +200,12 @@ export function DownloadQueue() {
                   </div>
                 </div>
               )}
+              
+              {item.status === 'error' && item.error && (
+                <div className="text-xs text-red-600 dark:text-red-400 mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                  ⚠️ {item.error}
+                </div>
+              )}
             </div>
 
             <button
