@@ -51,6 +51,7 @@ export default function Home() {
   const [autoDownload, setAutoDownload] = useState(true);
   const [bandwidthLimit, setBandwidthLimit] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [urlValid, setUrlValid] = useState<boolean | null>(null);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
   const { clipboardUrl, showNotification, useClipboardUrl, dismissNotification } = useClipboardMonitor();
 
@@ -109,6 +110,7 @@ export default function Home() {
     setResult(null);
     setFormat('video');
     setQuality('best');
+    setUrlValid(null);
   };
 
   // Keyboard shortcuts
@@ -357,15 +359,42 @@ export default function Home() {
 
             {/* URL Input */}
             <div className="flex gap-3">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !loading && handleDownload()}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
-                disabled={loading}
-              />
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => {
+                    const newUrl = e.target.value;
+                    setUrl(newUrl);
+                    // Validate URL
+                    if (newUrl.trim()) {
+                      const isValid = newUrl.includes('youtube.com') || newUrl.includes('youtu.be');
+                      setUrlValid(isValid);
+                    } else {
+                      setUrlValid(null);
+                    }
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && !loading && handleDownload()}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 ${
+                    urlValid === false 
+                      ? 'border-red-300 dark:border-red-600' 
+                      : urlValid === true 
+                        ? 'border-green-300 dark:border-green-600' 
+                        : 'border-gray-200 dark:border-gray-600'
+                  }`}
+                  disabled={loading}
+                />
+                {urlValid !== null && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {urlValid ? (
+                      <span className="text-green-500 text-lg">✓</span>
+                    ) : (
+                      <span className="text-red-500 text-lg">✗</span>
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleDownload}
                 disabled={loading || !url.trim()}
