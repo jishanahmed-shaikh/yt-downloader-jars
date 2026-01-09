@@ -197,6 +197,12 @@ export default function Home() {
               <span>✅ Audio Extraction</span>
               <span>✅ Batch Downloads</span>
               <span>✅ Playlist Support</span>
+              <button
+                onClick={() => setFormat(format === 'video' ? 'audio' : 'video')}
+                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
+              >
+                🔄 Quick: {format === 'video' ? 'Switch to Audio' : 'Switch to Video'}
+              </button>
             </div>
             
             {/* Mobile Gesture Hints */}
