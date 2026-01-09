@@ -129,110 +129,111 @@ export function DownloadQueue() {
               ) : (
                 <>
                   <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                  {item.title || 'Processing...'}
-                </span>
-                <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300">
-                  {item.format.toUpperCase()}
-                </span>
-                {item.quality && item.quality !== 'best' && (
-                  <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 rounded text-purple-600 dark:text-purple-300">
-                    {item.quality === 'worst' ? 'FAST' : `${item.quality}P`}
-                  </span>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className={`text-xs ${getStatusColor(item.status)}`}>
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  • {formatTimeAgo(item.createdAt)}
-                </span>
-                {item.size && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    • {formatBytes(item.size)}
-                  </span>
-                )}
-                {item.status === 'completed' && item.filename && (
-                  <div className="flex gap-2">
-                    <a
-                      href={`/api/serve/${encodeURIComponent(item.filename)}`}
-                      download={item.filename}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      onClick={(e) => {
-                        // Also trigger programmatic download
-                        e.preventDefault();
-                        const link = document.createElement('a');
-                        link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
-                        link.download = item.filename;
-                        link.click();
-                      }}
-                    >
-                      📥 Download
-                    </a>
-                    <button
-                      onClick={() => {
-                        const downloadUrl = `${window.location.origin}/api/serve/${encodeURIComponent(item.filename)}`;
-                        navigator.clipboard.writeText(downloadUrl).then(() => {
-                          // Show temporary feedback
-                          const button = document.activeElement as HTMLButtonElement;
-                          const originalText = button.textContent;
-                          button.textContent = '✅ Copied!';
-                          setTimeout(() => {
-                            button.textContent = originalText;
-                          }, 2000);
-                        });
-                      }}
-                      className="text-xs text-green-600 dark:text-green-400 hover:underline"
-                    >
-                      🔗 Copy Link
-                    </button>
-                  </div>
-                )}
-                {item.status === 'error' && (
-                  <button
-                    onClick={() => {
-                      // Retry download
-                      downloadStore.updateStatus(item.id, 'pending');
-                    }}
-                    className="text-xs text-orange-600 dark:text-orange-400 hover:underline"
-                  >
-                    🔄 Retry
-                  </button>
-                )}
-              </div>
-
-              {item.status === 'downloading' && (
-                <div className="mt-2">
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${item.progress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {item.progress}%
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {item.title || 'Processing...'}
                     </span>
-                    <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      {item.downloadSpeed && (
-                        <span>{formatSpeed(item.downloadSpeed)}</span>
-                      )}
-                      {item.eta && (
-                        <span>ETA: {formatETA(item.eta)}</span>
-                      )}
-                    </div>
+                    <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300">
+                      {item.format.toUpperCase()}
+                    </span>
+                    {item.quality && item.quality !== 'best' && (
+                      <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 rounded text-purple-600 dark:text-purple-300">
+                        {item.quality === 'worst' ? 'FAST' : `${item.quality}P`}
+                      </span>
+                    )}
                   </div>
-                </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs ${getStatusColor(item.status)}`}>
+                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                    </span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      • {formatTimeAgo(item.createdAt)}
+                    </span>
+                    {item.size && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        • {formatBytes(item.size)}
+                      </span>
+                    )}
+                    {item.status === 'completed' && item.filename && (
+                      <div className="flex gap-2">
+                        <a
+                          href={`/api/serve/${encodeURIComponent(item.filename)}`}
+                          download={item.filename}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          onClick={(e) => {
+                            // Also trigger programmatic download
+                            e.preventDefault();
+                            const link = document.createElement('a');
+                            link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
+                            link.download = item.filename;
+                            link.click();
+                          }}
+                        >
+                          📥 Download
+                        </a>
+                        <button
+                          onClick={() => {
+                            const downloadUrl = `${window.location.origin}/api/serve/${encodeURIComponent(item.filename)}`;
+                            navigator.clipboard.writeText(downloadUrl).then(() => {
+                              // Show temporary feedback
+                              const button = document.activeElement as HTMLButtonElement;
+                              const originalText = button.textContent;
+                              button.textContent = '✅ Copied!';
+                              setTimeout(() => {
+                                button.textContent = originalText;
+                              }, 2000);
+                            });
+                          }}
+                          className="text-xs text-green-600 dark:text-green-400 hover:underline"
+                        >
+                          🔗 Copy Link
+                        </button>
+                      </div>
+                    )}
+                    {item.status === 'error' && (
+                      <button
+                        onClick={() => {
+                          // Retry download
+                          downloadStore.updateStatus(item.id, 'pending');
+                        }}
+                        className="text-xs text-orange-600 dark:text-orange-400 hover:underline"
+                      >
+                        🔄 Retry
+                      </button>
+                    )}
+                  </div>
+
+                  {item.status === 'downloading' && (
+                    <div className="mt-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {item.progress}%
+                        </span>
+                        <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          {item.downloadSpeed && (
+                            <span>{formatSpeed(item.downloadSpeed)}</span>
+                          )}
+                          {item.eta && (
+                            <span>ETA: {formatETA(item.eta)}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {item.status === 'error' && item.error && (
+                    <div className="text-xs text-red-600 dark:text-red-400 mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                      ⚠️ {item.error}
+                    </div>
+                  )}
+                </>
               )}
-              
-              {item.status === 'error' && item.error && (
-                <div className="text-xs text-red-600 dark:text-red-400 mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                  ⚠️ {item.error}
-                </div>
-              )}
-            </div>
 
             <button
               onClick={() => downloadStore.removeFromQueue(item.id)}
