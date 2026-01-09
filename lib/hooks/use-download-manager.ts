@@ -35,6 +35,8 @@ export function useDownloadManager() {
     document.body.removeChild(link);
   };
 
+  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB limit
+
   const downloadSingle = useCallback(async (url: string, format: 'video' | 'audio', quality: string = 'best') => {
     setLoading(true);
     
