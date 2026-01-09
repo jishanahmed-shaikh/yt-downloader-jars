@@ -163,26 +163,30 @@ export function DownloadQueue() {
                           onClick={(e) => {
                             // Also trigger programmatic download
                             e.preventDefault();
-                            const link = document.createElement('a');
-                            link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
-                            link.download = item.filename;
-                            link.click();
+                            if (item.filename) {
+                              const link = document.createElement('a');
+                              link.href = `/api/serve/${encodeURIComponent(item.filename)}`;
+                              link.download = item.filename;
+                              link.click();
+                            }
                           }}
                         >
                           📥 Download
                         </a>
                         <button
                           onClick={() => {
-                            const downloadUrl = `${window.location.origin}/api/serve/${encodeURIComponent(item.filename)}`;
-                            navigator.clipboard.writeText(downloadUrl).then(() => {
-                              // Show temporary feedback
-                              const button = document.activeElement as HTMLButtonElement;
-                              const originalText = button.textContent;
-                              button.textContent = '✅ Copied!';
-                              setTimeout(() => {
-                                button.textContent = originalText;
-                              }, 2000);
-                            });
+                            if (item.filename) {
+                              const downloadUrl = `${window.location.origin}/api/serve/${encodeURIComponent(item.filename)}`;
+                              navigator.clipboard.writeText(downloadUrl).then(() => {
+                                // Show temporary feedback
+                                const button = document.activeElement as HTMLButtonElement;
+                                const originalText = button.textContent;
+                                button.textContent = '✅ Copied!';
+                                setTimeout(() => {
+                                  button.textContent = originalText;
+                                }, 2000);
+                              });
+                            }
                           }}
                           className="text-xs text-green-600 dark:text-green-400 hover:underline"
                         >
@@ -234,6 +238,7 @@ export function DownloadQueue() {
                   )}
                 </>
               )}
+            </div>
 
             <button
               onClick={() => downloadStore.removeFromQueue(item.id)}

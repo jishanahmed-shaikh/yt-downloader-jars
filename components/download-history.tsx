@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { downloadStore } from '@/lib/download-store';
-import { DownloadHistory } from '@/lib/types';
+import { type DownloadHistory } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 Bytes';

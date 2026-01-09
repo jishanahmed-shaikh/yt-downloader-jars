@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: createError('INVALID_REQUEST', 'URLs array is required'),
+          error: createError('INVALID_URL', 'URLs array is required'),
         },
         { status: 400 }
       );
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: createError('TOO_MANY_URLS', 'Maximum 10 URLs allowed per batch'),
+          error: createError('INVALID_URL', 'Maximum 10 URLs allowed per batch'),
         },
         { status: 400 }
       );
