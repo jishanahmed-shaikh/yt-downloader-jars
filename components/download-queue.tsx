@@ -80,6 +80,7 @@ export function DownloadQueue() {
   const downloadingCount = queue.filter(item => item.status === 'downloading').length;
   const completedCount = queue.filter(item => item.status === 'completed').length;
   const errorCount = queue.filter(item => item.status === 'error').length;
+  const successRate = queue.length > 0 ? Math.round((completedCount / queue.length) * 100) : 0;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
@@ -105,6 +106,11 @@ export function DownloadQueue() {
             {errorCount > 0 && (
               <span className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded">
                 ❌ {errorCount} failed
+              </span>
+            )}
+            {queue.length > 0 && (
+              <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded">
+                📊 {successRate}% success
               </span>
             )}
           </div>
