@@ -197,6 +197,7 @@ export default function Home() {
               <span>✅ Audio Extraction</span>
               <span>✅ Batch Downloads</span>
               <span>✅ Playlist Support</span>
+              <span className="text-blue-500">⏱️ Up to 2 hours</span>
               <button
                 onClick={() => setFormat(format === 'video' ? 'audio' : 'video')}
                 className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
