@@ -155,7 +155,10 @@ export function DownloadQueue() {
                       </span>
                     )}
                     {item.status === 'completed' && item.filename && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded">
+                          ✓ Ready
+                        </span>
                         <a
                           href={`/api/serve/${encodeURIComponent(item.filename)}`}
                           download={item.filename}
