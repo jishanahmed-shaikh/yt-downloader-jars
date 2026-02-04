@@ -323,6 +323,9 @@ export default function Home() {
                   🎵 Audio (MP3)
                 </button>
               </div>
+              <span className="ml-3 text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded self-center">
+                {format === 'video' ? '📺 Video with audio' : '🔊 Audio only'}
+              </span>
             </div>
 
             {/* Download Options */}
