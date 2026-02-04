@@ -326,7 +326,7 @@ export default function Home() {
             </div>
 
             {/* Download Options */}
-            <div className="flex justify-center gap-4 mb-4">
+            <div className="flex justify-center gap-4 mb-4 flex-wrap">
               <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <input
                   type="checkbox"
@@ -341,6 +341,9 @@ export default function Home() {
                 />
                 🖼️ Download Thumbnail
               </label>
+              <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+                📦 Max file size: 500MB
+              </span>
             </div>
 
             {/* Quality Selection */}
