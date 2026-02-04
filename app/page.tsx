@@ -504,6 +504,15 @@ export default function Home() {
           {/* Footer */}
           <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 space-y-2">
             <p>Internal tool for testing purposes only. Supports YouTube videos, Shorts, and playlists.</p>
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+              <p className="text-blue-700 dark:text-blue-400 font-medium mb-2">💡 Pro Tips:</p>
+              <ul className="text-blue-600 dark:text-blue-400 text-xs space-y-1">
+                <li>• Use Ctrl+V to quickly paste YouTube URLs</li>
+                <li>• Batch downloads support up to 10 URLs at once</li>
+                <li>• Videos up to 2 hours can be downloaded</li>
+                <li>• Auto-download is enabled by default</li>
+              </ul>
+            </div>
             <div className="flex flex-wrap justify-center gap-2">
               <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd>
               <span className="text-gray-300">Auto-paste URL</span>
