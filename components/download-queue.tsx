@@ -82,7 +82,10 @@ export function DownloadQueue() {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          Download Queue ({queue.length})
+          Download Queue 
+          <span className="ml-2 text-sm bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full">
+            {queue.length} item{queue.length !== 1 ? 's' : ''}
+          </span>
         </h3>
         <div className="flex gap-2">
           {pendingCount > 0 && (
