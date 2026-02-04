@@ -183,7 +183,7 @@ export default function Home() {
             <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
               🎬 YouTube Downloader
               <span className="ml-2 text-sm bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">
-                v2.0
+                v2.1
               </span>
               <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full">
                 {downloadStore.getHistory().length} downloads
