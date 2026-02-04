@@ -89,6 +89,11 @@ export function DownloadQueue() {
         </h3>
         <div className="flex gap-2">
           {pendingCount > 0 && (
+            <span className="text-xs px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded">
+              ⏳ {pendingCount} pending
+            </span>
+          )}
+          {pendingCount > 0 && (
             <button
               onClick={processPendingDownloads}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
