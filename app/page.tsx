@@ -23,16 +23,13 @@ interface DownloadResponse {
   duration?: number;
   videoId?: string;
   thumbnail?: string;
-  error?: {
-    code: string;
-    message: string;
-  };
+  error?: { code: string; message: string };
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
@@ -52,47 +49,28 @@ export default function Home() {
   const [bandwidthLimit, setBandwidthLimit] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [urlValid, setUrlValid] = useState<boolean | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const { loading, downloadSingle, downloadBatch } = useDownloadManager();
   const { clipboardUrl, showNotification, useClipboardUrl, dismissNotification } = useClipboardMonitor();
 
-  // Touch gestures for mobile
   const mainRef = useTouchGestures({
-    onSwipeLeft: () => {
-      // Swipe left to toggle format
-      setFormat(format === 'video' ? 'audio' : 'video');
-    },
-    onSwipeRight: () => {
-      // Swipe right to reset form
-      handleReset();
-    },
-    onSwipeUp: () => {
-      // Swipe up to scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    onDoubleTap: () => {
-      // Double tap to download
-      if (url.trim() && !loading) {
-        handleDownload();
-      }
-    },
+    onSwipeLeft: () => setFormat(format === 'video' ? 'audio' : 'video'),
+    onSwipeRight: () => handleReset(),
+    onSwipeUp: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+    onDoubleTap: () => { if (url.trim() && !loading) handleDownload(); },
   });
 
-  // Load auto-download setting on mount
   useEffect(() => {
     downloadStore.loadSettings();
     setAutoDownload(downloadStore.getAutoDownload());
     setBandwidthLimit(downloadStore.getBandwidthLimit());
     setAutoRefresh(downloadStore.getAutoRefresh());
-    
     const unsubscribe = downloadStore.subscribe(() => {
       setAutoDownload(downloadStore.getAutoDownload());
       setBandwidthLimit(downloadStore.getBandwidthLimit());
       setAutoRefresh(downloadStore.getAutoRefresh());
     });
-    
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, []);
 
   const handleDownload = async () => {
@@ -113,7 +91,6 @@ export default function Home() {
     setUrlValid(null);
   };
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
@@ -122,159 +99,115 @@ export default function Home() {
             if (e.target === document.body) {
               e.preventDefault();
               navigator.clipboard.readText().then(text => {
-                if (text.includes('youtube.com') || text.includes('youtu.be')) {
-                  setUrl(text);
-                }
-              }).catch(() => {
-                // Clipboard access denied, ignore
-              });
+                if (text.includes('youtube.com') || text.includes('youtu.be')) setUrl(text);
+              }).catch(() => {});
             }
             break;
           case 'Enter':
-            if (!loading && url.trim()) {
-              e.preventDefault();
-              handleDownload();
-            }
+            if (!loading && url.trim()) { e.preventDefault(); handleDownload(); }
             break;
           case 'r':
-            e.preventDefault();
-            handleReset();
-            break;
+            e.preventDefault(); handleReset(); break;
           case 'b':
             e.preventDefault();
-            // Toggle batch input
-            const batchSection = document.querySelector('[data-batch-input]') as HTMLElement;
-            if (batchSection) {
-              batchSection.click();
-            }
+            (document.querySelector('[data-batch-input]') as HTMLElement)?.click();
             break;
           case 'h':
             e.preventDefault();
-            // Toggle history
-            const historySection = document.querySelector('[data-history]') as HTMLElement;
-            if (historySection) {
-              historySection.click();
-            }
+            (document.querySelector('[data-history]') as HTMLElement)?.click();
             break;
         }
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [loading, url, handleDownload]);
 
-  // Auto-focus input on mount
   useEffect(() => {
-    const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-    if (input) {
-      input.focus();
-    }
+    (document.querySelector('input[type="text"]') as HTMLInputElement)?.focus();
   }, []);
 
   return (
     <main ref={mainRef} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <ThemeToggle />
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-2xl mx-auto">
+
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-              🎬 YouTube Downloader
-              <span className="ml-2 text-sm bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                YT Downloader
+              </h1>
+              <span className="text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
                 v2.1
               </span>
-              <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full">
-                {downloadStore.getHistory().length} downloads
-              </span>
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Download videos, audio, playlists, and manage your downloads
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Download YouTube videos, audio and playlists
             </p>
-            <div className="flex justify-center gap-4 text-sm text-gray-400 dark:text-gray-500 mb-4">
-              <span>✅ Videos & Shorts</span>
-              <span>✅ Audio Extraction</span>
-              <span>✅ Batch Downloads</span>
-              <span>✅ Playlist Support</span>
-              <span className="text-blue-500">⏱️ Up to 2 hours</span>
-              <button
-                onClick={() => setFormat(format === 'video' ? 'audio' : 'video')}
-                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
-              >
-                🔄 Quick: {format === 'video' ? 'Switch to Audio' : 'Switch to Video'}
-              </button>
-            </div>
-            
-            {/* Mobile Gesture Hints */}
-            <div className="block md:hidden text-xs text-gray-400 dark:text-gray-500 space-y-1">
-              <p>📱 Touch Gestures: Swipe ← → to change format • Double tap to download • Swipe ↑ to scroll top</p>
-            </div>
-            
-            {/* Auto-Download Toggle */}
-            <div className="flex justify-center items-center gap-2 text-sm mb-2">
-              <span className="text-gray-600 dark:text-gray-400">Auto-download files:</span>
-              <button
-                onClick={() => {
-                  const newValue = !autoDownload;
-                  downloadStore.setAutoDownload(newValue);
-                }}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  autoDownload ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    autoDownload ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {autoDownload ? 'ON' : 'OFF'}
-              </span>
-            </div>
-            
-            {/* Auto-Refresh Toggle */}
-            <div className="flex justify-center items-center gap-2 text-sm mb-2">
-              <span className="text-gray-600 dark:text-gray-400">Auto-refresh queue:</span>
-              <button
-                onClick={() => {
-                  const newValue = !autoRefresh;
-                  downloadStore.setAutoRefresh(newValue);
-                }}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  autoRefresh ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    autoRefresh ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {autoRefresh ? 'ON' : 'OFF'}
-              </span>
-            </div>
-            
-            {/* Bandwidth Limit */}
-            <div className="flex justify-center items-center gap-2 text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Speed limit:</span>
-              <select
-                value={bandwidthLimit}
-                onChange={(e) => downloadStore.setBandwidthLimit(Number(e.target.value))}
-                className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
-              >
-                <option value={0}>🚀 Unlimited</option>
-                <option value={100}>🐌 100 KB/s</option>
-                <option value={500}>🚶 500 KB/s</option>
-                <option value={1000}>🏃 1 MB/s</option>
-                <option value={5000}>🏎️ 5 MB/s</option>
-              </select>
+            <div className="flex justify-center gap-3 mt-3 text-xs text-gray-400 dark:text-gray-500">
+              <span>Videos &amp; Shorts</span>
+              <span>·</span>
+              <span>MP3 Audio</span>
+              <span>·</span>
+              <span>Batch &amp; Playlists</span>
+              <span>·</span>
+              <span>Up to 2 hrs</span>
             </div>
           </div>
 
-          {/* Download Presets */}
+          {/* Settings Panel */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="w-full px-5 py-3 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+            >
+              <span className="font-medium">Settings</span>
+              <svg className={`w-4 h-4 transition-transform ${showSettings ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showSettings && (
+              <div className="px-5 pb-4 border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Auto-download on complete</span>
+                  <button
+                    onClick={() => downloadStore.setAutoDownload(!autoDownload)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${autoDownload ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow ${autoDownload ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Auto-refresh queue</span>
+                  <button
+                    onClick={() => downloadStore.setAutoRefresh(!autoRefresh)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${autoRefresh ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow ${autoRefresh ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Speed limit</span>
+                  <select
+                    value={bandwidthLimit}
+                    onChange={(e) => downloadStore.setBandwidthLimit(Number(e.target.value))}
+                    className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  >
+                    <option value={0}>Unlimited</option>
+                    <option value={100}>100 KB/s</option>
+                    <option value={500}>500 KB/s</option>
+                    <option value={1000}>1 MB/s</option>
+                    <option value={5000}>5 MB/s</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Presets */}
           <DownloadPresets
             onApplyPreset={(preset) => {
               setFormat(preset.format);
@@ -291,262 +224,182 @@ export default function Home() {
             <BatchInput onBatchSubmit={handleBatchDownload} loading={loading} />
           </div>
 
-          {/* Download Queue */}
+          {/* Queue */}
           <DownloadQueue />
 
-          {/* Single Download */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              🎯 Quick Download
-            </h3>
-            
+          {/* Single Download Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-4">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
+              Quick Download
+            </h2>
+
             {/* Format Toggle */}
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 bg-gray-50 dark:bg-gray-700/50">
                 <button
                   onClick={() => setFormat('video')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    format === 'video'
-                      ? 'bg-red-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    format === 'video' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
                 >
-                  🎬 Video (MP4)
+                  Video
                 </button>
                 <button
                   onClick={() => setFormat('audio')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    format === 'audio'
-                      ? 'bg-red-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    format === 'audio' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
                 >
-                  🎵 Audio (MP3)
+                  Audio
                 </button>
               </div>
-              <span className="ml-3 text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded self-center">
-                {format === 'video' ? '📺 Video with audio' : '🔊 Audio only'}
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                {format === 'video' ? 'MP4' : 'MP3'}
               </span>
             </div>
 
-            {/* Download Options */}
-            <div className="flex justify-center gap-4 mb-4 flex-wrap">
-              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                />
-                📝 Download Subtitles
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                />
-                🖼️ Download Thumbnail
-              </label>
-              <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-                📦 Max file size: 500MB
-              </span>
-            </div>
-
-            {/* Quality Selection */}
+            {/* Quality */}
             {format === 'video' && (
-              <div className="flex justify-center mb-4">
+              <div className="mb-4">
                 <select
                   value={quality}
                   onChange={(e) => setQuality(e.target.value)}
-                  className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
                 >
-                  <option value="best">🏆 Best Quality</option>
-                  <option value="2160">📺 4K (2160p)</option>
-                  <option value="1440">📺 2K (1440p)</option>
-                  <option value="1080">📺 Full HD (1080p)</option>
-                  <option value="720">📺 HD (720p)</option>
-                  <option value="480">📺 SD (480p)</option>
-                  <option value="360">📺 Low (360p)</option>
-                  <option value="worst">⚡ Fastest (Lowest)</option>
+                  <option value="best">Best Quality</option>
+                  <option value="2160">4K (2160p)</option>
+                  <option value="1440">2K (1440p)</option>
+                  <option value="1080">Full HD (1080p)</option>
+                  <option value="720">HD (720p)</option>
+                  <option value="480">SD (480p)</option>
+                  <option value="360">Low (360p)</option>
+                  <option value="worst">Fastest (Lowest)</option>
                 </select>
               </div>
             )}
 
             {/* URL Input */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={url}
                   onChange={(e) => {
-                    const newUrl = e.target.value;
-                    setUrl(newUrl);
-                    // Validate URL
-                    if (newUrl.trim()) {
-                      const isValid = newUrl.includes('youtube.com') || newUrl.includes('youtu.be');
-                      setUrlValid(isValid);
-                    } else {
-                      setUrlValid(null);
-                    }
+                    const v = e.target.value;
+                    setUrl(v);
+                    setUrlValid(v.trim() ? (v.includes('youtube.com') || v.includes('youtu.be')) : null);
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && !loading && handleDownload()}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 ${
-                    urlValid === false 
-                      ? 'border-red-300 dark:border-red-600' 
-                      : urlValid === true 
-                        ? 'border-green-300 dark:border-green-600' 
-                        : 'border-gray-200 dark:border-gray-600'
+                  className={`w-full px-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 pr-8 ${
+                    urlValid === false ? 'border-red-300 dark:border-red-600' : urlValid === true ? 'border-green-300 dark:border-green-600' : 'border-gray-200 dark:border-gray-600'
                   }`}
                   disabled={loading}
                 />
                 {urlValid !== null && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {urlValid ? (
-                      <span className="text-green-500 text-lg">✓</span>
-                    ) : (
-                      <span className="text-red-500 text-lg">✗</span>
-                    )}
-                  </div>
+                  <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold ${urlValid ? 'text-green-500' : 'text-red-400'}`}>
+                    {urlValid ? '✓' : '✗'}
+                  </span>
                 )}
               </div>
               <button
                 onClick={handleDownload}
                 disabled={loading || !url.trim() || urlValid === false}
-                className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Processing...
-                  </span>
-                ) : urlValid === false ? (
-                  <span className="flex items-center gap-2">
-                    <span>❌</span>
-                    Invalid URL
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <span>⬇️</span>
-                    Download
-                  </span>
-                )}
+                    Processing
+                  </>
+                ) : 'Download'}
               </button>
             </div>
 
-            {/* Reset Button */}
             {(url || result) && !loading && (
               <button
                 onClick={handleReset}
-                className="mt-3 w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="mt-3 w-full py-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                🔄 Reset & Download Another
+                Clear &amp; reset
               </button>
             )}
           </div>
 
-          {/* Single Download Result */}
+          {/* Result */}
           {result && (
-            <div className={`rounded-xl shadow-lg p-6 mb-6 ${result.success ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}`}>
+            <div className={`rounded-xl border p-5 mb-4 ${result.success ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'}`}>
               {result.success ? (
-                <div>
-                  <div className="flex items-start gap-4 mb-4">
-                    {result.thumbnail && (
-                      <img
-                        src={result.thumbnail}
-                        alt={result.title}
-                        className="w-32 h-20 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">{result.title}</h3>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                        <p>Duration: {formatDuration(result.duration || 0)}</p>
-                        <p>Size: {formatBytes(result.size || 0)}</p>
-                        <p>Format: {result.filename?.endsWith('.mp3') ? '🎵 MP3 Audio' : '🎬 MP4 Video'}</p>
-                      </div>
+                <div className="flex items-start gap-4">
+                  {result.thumbnail && (
+                    <img src={result.thumbnail} alt={result.title} className="w-24 h-16 object-cover rounded-lg flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate mb-1">{result.title}</p>
+                    <div className="flex gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      <span>{formatDuration(result.duration || 0)}</span>
+                      <span>·</span>
+                      <span>{formatBytes(result.size || 0)}</span>
+                      <span>·</span>
+                      <span>{result.filename?.endsWith('.mp3') ? 'MP3' : 'MP4'}</span>
                     </div>
+                    <a
+                      href={`/api/serve/${result.filename}`}
+                      download={result.filename}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Save to device
+                    </a>
                   </div>
-                  <a
-                    href={`/api/serve/${result.filename}`}
-                    download={result.filename}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download to Device
-                  </a>
                 </div>
               ) : (
-                <div>
-                  <div className="flex items-center gap-2 text-red-700 dark:text-red-400 mb-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="font-medium">Error: {result.error?.code}</span>
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-400">{result.error?.code}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{result.error?.message}</p>
                   </div>
-                  <p className="text-red-600 dark:text-red-400">{result.error?.message}</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Download Statistics */}
+          {/* Stats & History */}
           <DownloadStats />
-
-          {/* Download History */}
-          <div data-history>
-            <DownloadHistory />
-          </div>
+          <div data-history><DownloadHistory /></div>
 
           {/* Footer */}
-          <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-8 space-y-2">
-            <p>Internal tool for testing purposes only. Supports YouTube videos, Shorts, and playlists.</p>
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
-              <p className="text-blue-700 dark:text-blue-400 font-medium mb-2">💡 Pro Tips:</p>
-              <ul className="text-blue-600 dark:text-blue-400 text-xs space-y-1">
-                <li>• Use Ctrl+V to quickly paste YouTube URLs</li>
-                <li>• Batch downloads support up to 10 URLs at once</li>
-                <li>• Videos up to 2 hours can be downloaded</li>
-                <li>• Auto-download is enabled by default</li>
-              </ul>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd>
-              <span className="text-gray-300">Auto-paste URL</span>
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd>
-              <span className="text-gray-300">Download</span>
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd>
-              <span className="text-gray-300">Reset</span>
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd>
-              <span className="text-gray-300">Batch</span>
-              <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+H</kbd>
-              <span className="text-gray-300">History</span>
-            </div>
-            <div className="block md:hidden mt-2 text-xs text-gray-400 dark:text-gray-500">
-              <p>📱 Mobile: Swipe gestures enabled for quick actions</p>
+          <div className="text-center mt-8 pb-4 space-y-2">
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Internal tool · YouTube videos, Shorts &amp; playlists
+            </p>
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+V</kbd> paste</span>
+              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> download</span>
+              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+R</kbd> reset</span>
+              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+B</kbd> batch</span>
             </div>
           </div>
+
         </div>
       </div>
-      
-      {/* Clipboard Notification */}
+
       {showNotification && clipboardUrl && (
         <ClipboardNotification
           url={clipboardUrl}
-          onUse={() => {
-            const url = useClipboardUrl();
-            if (url) {
-              setUrl(url);
-            }
-          }}
+          onUse={() => { const u = useClipboardUrl(); if (u) setUrl(u); }}
           onDismiss={dismissNotification}
         />
       )}
-      
-      {/* Quick Actions Menu */}
+
       <QuickActions />
     </main>
   );
