@@ -48,3 +48,9 @@ bin/*.exe
 bin/yt-dlp
 bin/ffmpeg
 
+# Temp / debug output files
+*.txt
+out*.txt
+err*.txt
+update_*.txt
+
