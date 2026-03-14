@@ -1,281 +1,157 @@
-# 🎬 JARS YouTube Downloader
+# JARS YouTube Downloader
 
-A powerful, feature-rich YouTube downloader with advanced batch processing, playlist support, and automatic download management. Built for testing and internal use.
+A powerful, feature-rich YouTube downloader with batch processing, playlist support, and automatic download management. Built with Next.js 14 and yt-dlp.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker)
+![Version](https://img.shields.io/badge/Version-2.1-green?style=flat-square)
 ![License](https://img.shields.io/badge/License-Internal-red?style=flat-square)
 
-## ✨ Features
+## Features
 
-### 🎯 Core Functionality
-- 📥 **Single Downloads** - Download individual YouTube videos and Shorts
-- 🎵 **Audio Extraction** - Extract MP3 audio from any video
-- 📋 **Batch Downloads** - Process up to 10 URLs simultaneously
-- 🎼 **Playlist Support** - Download entire YouTube playlists
-- ✅ **Auto-validation** - Automatic public/unlisted video detection
+### Core
+- Single video downloads (MP4)
+- Audio extraction (MP3) from any video
+- Batch downloads — up to 10 URLs at once
+- Playlist support — extracts and queues individual videos
+- URL validation with public/unlisted detection
 
-### 🚀 Advanced Features
-- 📊 **Real-time Progress Bars** - Individual progress tracking for each download
-- 📥 **Automatic Downloads** - Browser save dialogs appear automatically
-- 🎛️ **Auto-Download Toggle** - Enable/disable automatic downloads
-- 📋 **Download Queue** - Visual queue management with status tracking
-- 📚 **Download History** - Persistent history of all downloads
-- 🌙 **Dark Mode** - System-aware dark/light theme toggle
+### Queue & History
+- Real-time per-item progress bars
+- Download queue with status tracking (Pending / Downloading / Completed / Error)
+- Persistent download history (last 50 entries, stored in localStorage)
+- Retry button for failed downloads
+- Clear completed items
 
-### 🎮 User Experience
-- ⌨️ **Keyboard Shortcuts** - Ctrl+V (paste), Ctrl+Enter (download), Ctrl+R (reset)
-- 🎯 **Auto-focus** - Input field automatically focused on page load
-- 📱 **Responsive Design** - Works perfectly on desktop and mobile
-- 🔄 **Smart Reset** - One-click reset for new downloads
-- ⏳ **Loading States** - Beautiful loading animations and skeletons
+### UX
+- Auto-download toggle — browser save dialog fires automatically on completion
+- Dark / light mode with system preference detection
+- Keyboard shortcuts: `Ctrl+V` paste, `Ctrl+Enter` download, `Ctrl+R` reset
+- Responsive layout for desktop and mobile
+- Browser notifications on completion
+- Clipboard monitor — detects YouTube URLs copied to clipboard
+- Download presets — save and reuse format/quality settings
+- Touch gesture support for mobile
 
-### 🔧 Technical Features
-- 🐳 **Docker Ready** - Production-ready containerization
-- 📡 **RESTful API** - Clean JSON API for programmatic access
-- 🛡️ **Error Handling** - Comprehensive error management
-- 💾 **Local Storage** - Persistent settings and history
-- 🎨 **Modern UI** - Clean, minimal design with Tailwind CSS
+### Technical
+- Docker-ready for production deployment
+- Clean REST API (`/api/download`, `/api/batch-download`, `/api/serve/[filename]`)
+- yt-dlp auto-update on startup (always uses latest binary)
+- Non-ASCII filename sanitization (Arabic, emoji, CJK titles work correctly)
+- Configurable duration limit via environment variable
 
-## 🖼️ Preview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    🎬 YouTube Downloader                        │
-│        Download videos, audio, playlists, and manage           │
-│                                                                 │
-│  Auto-download files: [●────○] ON                              │
-│                                                                 │
-│  📋 Batch Download                                              │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ https://youtube.com/watch?v=...                         │   │
-│  │ https://youtube.com/playlist?list=...                   │   │
-│  │ https://youtu.be/...                                    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                        [Download 3 Items]      │
-│                                                                 │
-│  📊 Download Queue (5)                    [Process 2 Pending]  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ ⬇️ Video Title 1                    [████████░░] 80%    │   │
-│  │ ✅ Video Title 2                    📥 Download         │   │
-│  │ ⏳ Playlist: 10 videos              Pending             │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  🎯 Quick Download                                              │
-│  ┌─────────────────────────────┐ ┌──────────┐                 │
-│  │ https://youtube.com/...     │ │ Download │                 │
-│  └─────────────────────────────┘ └──────────┘                 │
-│                                                                 │
-│  📚 Download History (25)                                      │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ ✅ Amazing Video - 2 hours ago      📥 Download         │   │
-│  │ ✅ Cool Song.mp3 - 5 hours ago      📥 Download         │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- yt-dlp (`winget install yt-dlp` or `brew install yt-dlp`)
-- ffmpeg (`winget install ffmpeg` or `brew install ffmpeg`)
+- yt-dlp and ffmpeg (the setup script downloads them automatically)
 
 ### Local Development
 
 ```bash
-# Clone the repository
 git clone https://github.com/jishanahmed-shaikh/yt-downloader-jars.git
 cd yt-downloader-jars
 
-# Install dependencies
 npm install
 
-# Download yt-dlp binary (Windows)
-mkdir bin
-curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -o bin/yt-dlp.exe
+# Download yt-dlp + ffmpeg into bin/
+node scripts/setup-ytdlp.js
 
-# Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-## 🎮 How to Use
+## How to Use
 
-### Single Downloads
-1. Paste a YouTube URL in the quick download section
-2. Choose **Video (MP4)** or **Audio (MP3)** format
-3. Click **Download** or press **Ctrl+Enter**
-4. File automatically downloads to your device (if auto-download is ON)
+### Single Download
+1. Paste a YouTube URL in the quick download field
+2. Choose Video (MP4) or Audio (MP3)
+3. Click Download or press `Ctrl+Enter`
 
-### Batch Downloads
-1. Click **📋 Batch Download** to expand
+### Batch Download
+1. Expand the Batch Download panel
 2. Paste multiple URLs (one per line, max 10)
-3. Choose format and click **Download X Items**
-4. Watch progress bars for each item
-5. Files download automatically as they complete
+3. Click "Download X Items"
+4. Each item shows its own progress bar
 
-### Playlist Downloads
-1. Paste a YouTube playlist URL
-2. System detects playlist and extracts individual videos
-3. Videos appear as "Pending" in the queue
-4. Click **Process X Pending** to download all videos
+### Playlist Download
+1. Paste a playlist URL
+2. The system extracts individual videos into the queue as Pending
+3. Click "Process X Pending" to start downloading
 
-### Keyboard Shortcuts
-- **Ctrl+V** - Auto-paste YouTube URL from clipboard
-- **Ctrl+Enter** - Start download
-- **Ctrl+R** - Reset form
+## Deployment
 
-## 🐳 Deployment
+### Railway (recommended)
 
-### Railway (Recommended)
-
-1. Push code to GitHub
-2. Go to [railway.app](https://railway.app)
-3. Click **New Project** → **Deploy from GitHub repo**
-4. Select this repository
-5. Railway auto-detects Dockerfile and deploys ✨
+1. Push to GitHub
+2. New Project → Deploy from GitHub repo
+3. Railway detects the Dockerfile automatically
 
 ### Render
 
-1. Push code to GitHub
-2. Go to [render.com](https://render.com)
-3. Create **New Web Service**
-4. Connect your GitHub repo
-5. Select **Docker** environment
-6. Deploy
+1. Push to GitHub
+2. New Web Service → Docker environment → Deploy
 
-### Vercel (Serverless)
-
-1. Push code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your GitHub repository
-4. Vercel auto-deploys with zero configuration
-
-### Docker (Self-hosted)
+### Docker (self-hosted)
 
 ```bash
-# Build image
 docker build -t yt-downloader-jars .
-
-# Run container
 docker run -p 3000:3000 yt-downloader-jars
 ```
 
-## 📡 API Reference
+### Vercel
+
+Import the repo — Vercel deploys with zero config. Note: serverless functions have a 10s timeout which may be too short for longer videos.
+
+## API Reference
 
 ### POST `/api/download`
 
-Download a single YouTube video or audio.
-
-**Request:**
 ```json
-{
-  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
-  "format": "video" // or "audio"
-}
-```
+// Request
+{ "url": "https://www.youtube.com/watch?v=VIDEO_ID", "format": "video", "quality": "best" }
 
-**Success Response:**
-```json
-{
-  "success": true,
-  "title": "Video Title",
-  "duration": 180,
-  "size": 15728640,
-  "filename": "Video_Title_VIDEO_ID.mp4",
-  "videoId": "VIDEO_ID",
-  "thumbnail": "https://..."
-}
+// Success response
+{ "success": true, "title": "...", "duration": 180, "size": 15728640, "filename": "...", "videoId": "...", "thumbnail": "..." }
 ```
 
 ### POST `/api/batch-download`
 
-Process multiple URLs including playlists.
-
-**Request:**
 ```json
-{
-  "urls": [
-    "https://www.youtube.com/watch?v=VIDEO_ID1",
-    "https://www.youtube.com/playlist?list=PLAYLIST_ID"
-  ],
-  "format": "video"
-}
-```
+// Request
+{ "urls": ["https://..."], "format": "audio", "quality": "best" }
 
-**Success Response:**
-```json
-{
-  "success": true,
-  "processed": 2,
-  "successful": 2,
-  "failed": 0,
-  "results": [
-    {
-      "url": "https://www.youtube.com/watch?v=VIDEO_ID1",
-      "success": true,
-      "type": "video",
-      "data": { /* video metadata */ }
-    },
-    {
-      "url": "https://www.youtube.com/playlist?list=PLAYLIST_ID",
-      "success": true,
-      "type": "playlist",
-      "data": {
-        "title": "Playlist Name",
-        "videoCount": 25,
-        "videos": [ /* array of video objects */ ]
-      }
-    }
-  ]
-}
+// Success response
+{ "success": true, "processed": 2, "successful": 2, "failed": 0, "results": [...] }
 ```
 
 ### GET `/api/serve/[filename]`
 
-Download the processed file to your device.
+Streams the processed file to the browser with `Content-Disposition: attachment`.
 
-**Response Headers:**
-```
-Content-Type: video/mp4 | audio/mpeg
-Content-Disposition: attachment; filename="..."
-Content-Length: [file_size]
-```
+## Supported URL Formats
 
-## 🔗 Supported URL Formats
+| Format | Example |
+|--------|---------|
+| Standard video | `youtube.com/watch?v=ID` |
+| Short URL | `youtu.be/ID` |
+| YouTube Shorts | `youtube.com/shorts/ID` |
+| Mobile | `m.youtube.com/watch?v=ID` |
+| Playlist | `youtube.com/playlist?list=ID` |
+| Video in playlist | `youtube.com/watch?v=ID&list=ID` |
 
-| Format | Example | Supported |
-|--------|---------|-----------|
-| Standard Video | `https://www.youtube.com/watch?v=VIDEO_ID` | ✅ |
-| Short URL | `https://youtu.be/VIDEO_ID` | ✅ |
-| YouTube Shorts | `https://www.youtube.com/shorts/VIDEO_ID` | ✅ |
-| Mobile URL | `https://m.youtube.com/watch?v=VIDEO_ID` | ✅ |
-| Playlist | `https://www.youtube.com/playlist?list=PLAYLIST_ID` | ✅ |
-| Video in Playlist | `https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID` | ✅ |
-
-## ⚙️ Environment Variables
+## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DOWNLOAD_DIR` | Directory for downloaded files | `/tmp` |
-| `MAX_DURATION` | Max video duration (seconds) | `3600` |
+| `DOWNLOAD_DIR` | Output directory for downloaded files | `/tmp` |
+| `MAX_DURATION` | Max video duration in seconds | `7200` (2 hours) |
 | `PORT` | Server port | `3000` |
 
-## 🛠️ Tech Stack
-
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **State Management:** Custom React hooks + Context
-- **Video Processing:** yt-dlp + ffmpeg
-- **Storage:** localStorage (client-side)
-- **Deployment:** Docker, Vercel, Railway, Render
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── app/
@@ -285,97 +161,72 @@ Content-Length: [file_size]
 │   │   ├── progress/[id]/route.ts      # Progress tracking
 │   │   └── serve/[filename]/route.ts   # File serving
 │   ├── page.tsx                        # Main UI
-│   ├── layout.tsx                      # App layout
-│   └── globals.css                     # Global styles
+│   ├── layout.tsx
+│   └── globals.css
 ├── components/
-│   ├── batch-input.tsx                 # Batch download UI
-│   ├── download-queue.tsx              # Queue management
-│   ├── download-history.tsx            # History display
-│   ├── theme-toggle.tsx                # Dark mode toggle
-│   ├── loading-skeleton.tsx            # Loading states
-│   └── error-boundary.tsx              # Error handling
+│   ├── batch-input.tsx
+│   ├── download-queue.tsx
+│   ├── download-history.tsx
+│   ├── download-stats.tsx
+│   ├── download-presets.tsx
+│   ├── quick-actions.tsx
+│   ├── theme-toggle.tsx
+│   ├── clipboard-notification.tsx
+│   ├── loading-skeleton.tsx
+│   └── error-boundary.tsx
 ├── lib/
 │   ├── hooks/
-│   │   └── use-download-manager.ts     # Download logic
-│   ├── validator.ts                    # URL validation
+│   │   ├── use-download-manager.ts     # Download orchestration hook
+│   │   ├── use-clipboard-monitor.ts    # Clipboard URL detection
+│   │   └── use-touch-gestures.ts       # Mobile gesture support
 │   ├── downloader.ts                   # yt-dlp wrapper
 │   ├── download-store.ts               # State management
-│   ├── types.ts                        # TypeScript types
-│   └── errors.ts                       # Error handling
-├── Dockerfile                          # Production container
-├── railway.json                        # Railway config
-├── render.yaml                         # Render config
-└── vercel.json                         # Vercel config
+│   ├── types.ts                        # TypeScript interfaces
+│   ├── validator.ts                    # URL validation
+│   ├── errors.ts                       # Error types and parsing
+│   └── theme-context.tsx               # Theme provider
+├── scripts/
+│   └── setup-ytdlp.js                  # Binary setup + auto-update
+├── Dockerfile
+├── railway.json
+├── render.yaml
+└── vercel.json
 ```
 
-## 🎯 Features in Detail
-
-### Batch Downloads
-- Process up to 10 URLs simultaneously
-- Individual progress bars for each item
-- Smart error handling - failed items don't stop others
-- Automatic playlist detection and expansion
-
-### Download Queue
-- Real-time status updates (Pending → Downloading → Completed)
-- Progress bars with percentage indicators
-- Manual download buttons for completed items
-- Remove items from queue
-- Clear completed items
-
-### Auto-Download System
-- Automatic browser save dialogs when downloads complete
-- Configurable ON/OFF toggle with persistence
-- Staggered downloads for batch processing (prevents popup blocking)
-- Manual download fallback buttons
-
-### Download History
-- Persistent storage of all completed downloads
-- Collapsible UI to save space
-- Re-download capability for historical items
-- Automatic cleanup (keeps last 50 items)
-
-### Dark Mode
-- System preference detection
-- Floating toggle button
-- Smooth transitions between themes
-- Persistent user preference
-
-## ⚠️ Troubleshooting
+## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| "yt-dlp not found" | Install yt-dlp and ensure it's in PATH or use setup script |
-| "Video is private" | Only public/unlisted videos supported |
-| "Download timeout" | Video may be too long, check MAX_DURATION |
-| Corrupt video file | Ensure ffmpeg is installed for proper encoding |
-| Batch downloads stop | Check network connection, individual items may fail |
+| "yt-dlp not found" | Run `node scripts/setup-ytdlp.js` |
+| "Video is private" | Only public/unlisted videos are supported |
+| "Video is too long" | Increase `MAX_DURATION` in `.env.local` |
+| Corrupt video file | Ensure ffmpeg is present in `bin/` |
 | Auto-download not working | Check browser popup blocker settings |
-| Progress bars stuck | Refresh page, downloads continue in background |
+| Non-ASCII title fails | Already handled — titles are ASCII-sanitized automatically |
 
-## 🔄 Recent Updates
+## Changelog
 
-### v2.0.0 - Advanced Features
-- ✨ Added batch download functionality
-- ✨ Added playlist support with individual video extraction
-- ✨ Added real-time progress bars for all downloads
-- ✨ Added automatic download triggers with browser save dialogs
-- ✨ Added download queue management
-- ✨ Added persistent download history
-- ✨ Added dark mode toggle
-- ✨ Added keyboard shortcuts
-- ✨ Added auto-download toggle setting
+### v2.1.0
+- Non-ASCII filename sanitization (Arabic, emoji, CJK titles no longer cause failures)
+- yt-dlp auto-update on startup via `scripts/setup-ytdlp.js`
+- Increased default `MAX_DURATION` to 7200 seconds (2 hours)
+- Clean, professional UI redesign — removed emoji clutter, consistent card styling
+- Full JSDoc documentation across all core modules
+- Download presets, clipboard monitor, touch gesture support
+- Download statistics, quick actions menu, export history (CSV/JSON)
 
-### v1.0.0 - Initial Release
-- 📥 Single video downloads
-- 🎵 Audio extraction (MP3)
-- 🎨 Clean UI with Tailwind CSS
-- 🐳 Docker deployment ready
+### v2.0.0
+- Batch downloads with per-item progress bars
+- Playlist support with individual video extraction
+- Download queue and persistent history
+- Auto-download browser save dialogs
+- Dark mode, keyboard shortcuts, error boundaries
 
-## 📄 License
-
-Internal use only. Not for public distribution.
+### v1.0.0
+- Single video and audio downloads
+- yt-dlp + ffmpeg integration
+- Docker deployment support
 
 ---
 
-Built with ❤️ by JISHANAHMED AR SHAIKH | [LinkedIn](https://www.linkedin.com/in/jishanahmedshaikh/)
+Built by JISHANAHMED AR SHAIKH | [LinkedIn](https://www.linkedin.com/in/jishanahmedshaikh/)
