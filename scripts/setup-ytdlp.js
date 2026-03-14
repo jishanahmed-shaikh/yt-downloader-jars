@@ -10,14 +10,14 @@ const YTDLP_PATH = path.join(BIN_DIR, 'yt-dlp');
 async function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    
+
     const request = (url) => {
       https.get(url, (response) => {
         if (response.statusCode === 302 || response.statusCode === 301) {
           request(response.headers.location);
           return;
         }
-        
+
         response.pipe(file);
         file.on('finish', () => {
           file.close();
@@ -28,25 +28,30 @@ async function downloadFile(url, dest) {
         reject(err);
       });
     };
-    
+
     request(url);
   });
 }
 
 async function setup() {
   console.log('Setting up yt-dlp...');
-  
+
   // Create bin directory
   if (!fs.existsSync(BIN_DIR)) {
     fs.mkdirSync(BIN_DIR, { recursive: true });
   }
-  
-  // Check if yt-dlp already exists
+
+  // If yt-dlp already exists, update it instead of skipping
   if (fs.existsSync(YTDLP_PATH)) {
-    console.log('yt-dlp already exists, skipping download');
+    console.log('yt-dlp found, checking for updates...');
+    try {
+      execSync(`"${YTDLP_PATH}" -U`, { stdio: 'inherit' });
+    } catch {
+      console.log('Could not auto-update yt-dlp, continuing with existing version');
+    }
     return;
   }
-  
+
   try {
     // Try system yt-dlp first
     execSync('yt-dlp --version', { stdio: 'ignore' });
@@ -55,7 +60,7 @@ async function setup() {
   } catch {
     console.log('System yt-dlp not found, downloading...');
   }
-  
+
   try {
     await downloadFile(YTDLP_URL, YTDLP_PATH);
     fs.chmodSync(YTDLP_PATH, '755');
