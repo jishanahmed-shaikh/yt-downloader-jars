@@ -5,9 +5,9 @@ import { downloadStore } from '@/lib/download-store';
 import { type DownloadStats } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
@@ -17,96 +17,51 @@ export function DownloadStats() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const updateStats = () => {
-      setStats(downloadStore.getStats());
-    };
-
-    updateStats();
-    const unsubscribe = downloadStore.subscribe(updateStats);
+    const update = () => setStats(downloadStore.getStats());
+    update();
+    const unsubscribe = downloadStore.subscribe(update);
     return unsubscribe;
   }, []);
 
-  if (!stats || stats.totalDownloads === 0) {
-    return null;
-  }
+  if (!stats || stats.totalDownloads === 0) return null;
+
+  const statItems = [
+    { label: 'Total', value: stats.totalDownloads.toString(), color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Data', value: formatBytes(stats.totalDataDownloaded), color: 'text-green-600 dark:text-green-400' },
+    { label: 'Avg size', value: formatBytes(stats.averageFileSize), color: 'text-purple-600 dark:text-purple-400' },
+    { label: 'Today', value: stats.todayDownloads.toString(), color: 'text-orange-600 dark:text-orange-400' },
+  ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors"
       >
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            📊 Download Statistics
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {stats.totalDownloads} downloads • {formatBytes(stats.totalDataDownloaded)} total
-          </p>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Statistics</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            {stats.totalDownloads} downloads · {formatBytes(stats.totalDataDownloaded)}
+          </span>
         </div>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="px-6 pb-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.totalDownloads}
+        <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+          <div className="grid grid-cols-4 gap-3">
+            {statItems.map(({ label, value, color }) => (
+              <div key={label} className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className={`text-lg font-bold ${color}`}>{value}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</div>
               </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">
-                Total Downloads
-              </div>
-            </div>
-
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatBytes(stats.totalDataDownloaded)}
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-400">
-                Data Downloaded
-              </div>
-            </div>
-
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {formatBytes(stats.averageFileSize)}
-              </div>
-              <div className="text-sm text-purple-600 dark:text-purple-400">
-                Average Size
-              </div>
-            </div>
-
-            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {stats.todayDownloads}
-              </div>
-              <div className="text-sm text-orange-600 dark:text-orange-400">
-                Today's Downloads
-              </div>
-            </div>
+            ))}
           </div>
-
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>
-              Most downloaded format: 
-              <span className="ml-1 font-medium">
-                {stats.mostDownloadedFormat === 'video' ? '🎬 Video' : '🎵 Audio'}
-              </span>
-            </span>
-            <span>
-              Success rate: 
-              <span className="ml-1 font-medium text-green-600 dark:text-green-400">
-                {stats.successRate}%
-              </span>
-            </span>
+          <div className="flex items-center justify-between mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <span>Top format: <span className="font-medium text-gray-700 dark:text-gray-300">{stats.mostDownloadedFormat}</span></span>
+            <span>Success rate: <span className="font-medium text-green-600 dark:text-green-400">{stats.successRate}%</span></span>
           </div>
         </div>
       )}
