@@ -44,10 +44,12 @@ function getDownloadDir(): string {
 
 function sanitizeFilename(title: string): string {
   return title
-    .replace(/[<>:"/\\|?*#%&{}$!'`@=+]/g, '') // Remove URL-unsafe and filesystem-unsafe chars
+    .replace(/[^\x00-\x7F]/g, '')          // Strip all non-ASCII (Arabic, emoji, etc.)
+    .replace(/[<>:"/\\|?*#%&{}$!'`@=+]/g, '') // Remove unsafe chars
     .replace(/\s+/g, '_')
-    .replace(/_+/g, '_') // Collapse multiple underscores
-    .substring(0, 80);
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')                  // Trim leading/trailing underscores
+    .substring(0, 80) || 'download';        // Fallback if title is entirely non-ASCII
 }
 
 function getBinDir(): string {
@@ -58,19 +60,19 @@ function getYtdlpPath(): string {
   const isWindows = process.platform === 'win32';
   const ext = isWindows ? '.exe' : '';
   const binDir = getBinDir();
-  
+
   // Check local bin directory first (for bundled yt-dlp)
   const localBin = path.join(binDir, `yt-dlp${ext}`);
   if (fs.existsSync(localBin)) {
     return localBin;
   }
-  
+
   // Check without extension (Linux/Mac)
   const localBinNoExt = path.join(binDir, 'yt-dlp');
   if (fs.existsSync(localBinNoExt)) {
     return localBinNoExt;
   }
-  
+
   // Fall back to system yt-dlp
   return 'yt-dlp';
 }
@@ -79,7 +81,7 @@ function getFfmpegLocation(): string | null {
   const isWindows = process.platform === 'win32';
   const ext = isWindows ? '.exe' : '';
   const binDir = getBinDir();
-  
+
   const localFfmpeg = path.join(binDir, `ffmpeg${ext}`);
   if (fs.existsSync(localFfmpeg)) {
     return binDir; // Return directory, not file path
@@ -175,20 +177,20 @@ export async function downloadVideo(url: string, videoId: string, quality: strin
     // Build command with ffmpeg location if available locally
     const ffmpegDir = getFfmpegLocation();
     const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
-    
+
     // Build quality format string
     let formatString = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best';
-    
+
     if (quality !== 'best' && quality !== 'worst') {
       // Specific quality requested (e.g., '1080', '720')
       formatString = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]`;
     } else if (quality === 'worst') {
       formatString = 'worstvideo[ext=mp4]+worstaudio[ext=m4a]/worstvideo+worstaudio/worst';
     }
-    
+
     // Download with specified quality and merge to MP4 for universal compatibility
     const command = `"${ytdlpPath}" ${ffmpegArg} -f "${formatString}" --merge-output-format mp4 -o "${filepath}" --no-warnings "${url}"`;
-    
+
     console.log('Running command:', command);
     await execAsync(command, { timeout: 300000 }); // 5 minute timeout
 
@@ -241,23 +243,35 @@ export async function downloadAudio(url: string, videoId: string, quality: strin
   try {
     const ffmpegDir = getFfmpegLocation();
     const ffmpegArg = ffmpegDir ? `--ffmpeg-location "${ffmpegDir}"` : '';
-    
-    // Download audio only and convert to MP3
-    const command = `"${ytdlpPath}" ${ffmpegArg} -x --audio-format mp3 --audio-quality 0 -o "${filepath.replace('.mp3', '.%(ext)s')}" --no-warnings "${url}"`;
-    
+
+    // Use base path without extension — yt-dlp adds .%(ext)s then converts to mp3
+    const baseFilepath = filepath.replace('.mp3', '');
+    const command = `"${ytdlpPath}" ${ffmpegArg} -x --audio-format mp3 --audio-quality 0 -o "${baseFilepath}.%(ext)s" --no-warnings "${url}"`;
+
     console.log('Running audio command:', command);
     await execAsync(command, { timeout: 300000 });
 
-    // Get file size
-    const stats = fs.statSync(filepath);
+    // yt-dlp may produce the file with a slightly different name — find it
+    let actualFilepath = filepath;
+    if (!fs.existsSync(filepath)) {
+      const files = fs.readdirSync(downloadDir);
+      const match = files.find(f => f.startsWith(path.basename(baseFilepath)) && f.endsWith('.mp3'));
+      if (match) {
+        actualFilepath = path.join(downloadDir, match);
+      } else {
+        throw new Error(`Output file not found after download. Expected: ${filepath}`);
+      }
+    }
+
+    const stats = fs.statSync(actualFilepath);
 
     return {
       success: true,
       data: {
         title,
         duration,
-        filename: safeFilename,
-        filepath,
+        filename: path.basename(actualFilepath),
+        filepath: actualFilepath,
         size: stats.size,
         videoId,
         thumbnail,
