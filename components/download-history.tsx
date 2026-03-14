@@ -5,9 +5,9 @@ import { downloadStore } from '@/lib/download-store';
 import { type DownloadHistory } from '@/lib/types';
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
@@ -32,136 +32,90 @@ export function DownloadHistory() {
 
   useEffect(() => {
     downloadStore.loadHistory();
-    const unsubscribe = downloadStore.subscribe(() => {
-      setHistory(downloadStore.getHistory());
-    });
+    const unsubscribe = downloadStore.subscribe(() => setHistory(downloadStore.getHistory()));
     setHistory(downloadStore.getHistory());
     return unsubscribe;
   }, []);
 
-  const filteredHistory = history.filter(item =>
+  const filtered = history.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.filename.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const exportHistory = (format: 'csv' | 'json') => {
-    if (format === 'csv') {
-      const csvContent = [
-        'Title,URL,Format,Filename,Size (MB),Duration (seconds),Downloaded At',
-        ...filteredHistory.map(item => 
-          `"${item.title}","${item.url}","${item.format}","${item.filename}",${(item.size / 1024 / 1024).toFixed(2)},${item.duration},"${item.downloadedAt.toISOString()}"`
-        )
+  const exportHistory = (fmt: 'csv' | 'json') => {
+    let content: string, type: string, ext: string;
+    if (fmt === 'csv') {
+      content = ['Title,URL,Format,Filename,Size (MB),Duration,Downloaded At',
+        ...filtered.map(i => `"${i.title}","${i.url}","${i.format}","${i.filename}",${(i.size / 1024 / 1024).toFixed(2)},${i.duration},"${i.downloadedAt.toISOString()}"`)
       ].join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `download-history-${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      type = 'text/csv'; ext = 'csv';
     } else {
-      const jsonContent = JSON.stringify(filteredHistory, null, 2);
-      const blob = new Blob([jsonContent], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `download-history-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      content = JSON.stringify(filtered, null, 2);
+      type = 'application/json'; ext = 'json';
     }
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `history-${new Date().toISOString().split('T')[0]}.${ext}`; a.click();
+    URL.revokeObjectURL(url);
   };
 
-  if (history.length === 0) {
-    return null;
-  }
+  if (history.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
       <button
+        data-history
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors"
       >
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          📥 Download History ({history.length})
-        </h3>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">History</span>
+          <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{history.length}</span>
+        </div>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="px-6 pb-6">
-          {/* Search Input */}
-          <div className="mb-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="🔍 Search downloads..."
-                className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
-              />
-              <div className="flex gap-1">
-                <button
-                  onClick={() => exportHistory('csv')}
-                  className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  title="Export as CSV"
-                >
-                  📊 CSV
-                </button>
-                <button
-                  onClick={() => exportHistory('json')}
-                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  title="Export as JSON"
-                >
-                  📄 JSON
-                </button>
-              </div>
-            </div>
+        <div className="border-t border-gray-100 dark:border-gray-700">
+          <div className="px-5 py-3 flex gap-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search history..."
+              className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700"
+            />
+            <button onClick={() => exportHistory('csv')} className="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">CSV</button>
+            <button onClick={() => exportHistory('json')} className="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">JSON</button>
           </div>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {filteredHistory.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-4">
-                {searchTerm ? 'No downloads match your search' : 'No downloads yet'}
-              </div>
-            ) : (
-              filteredHistory.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                <span className="text-lg">
-                  {item.format === 'audio' ? '🎵' : '🎬'}
-                </span>
-                
+          <div className="divide-y divide-gray-50 dark:divide-gray-700/50 max-h-72 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-6">
+                {searchTerm ? 'No results found' : 'No downloads yet'}
+              </p>
+            ) : filtered.map((item) => (
+              <div key={item.id} className="px-5 py-3 flex items-center gap-3">
+                <span className="text-base flex-shrink-0">{item.format === 'audio' ? '🎵' : '🎬'}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                      {item.title}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300">
-                      {item.format.toUpperCase()}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.title}</p>
+                  <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    <span className="uppercase">{item.format}</span>
+                    <span>·</span>
                     <span>{formatBytes(item.size)}</span>
+                    <span>·</span>
                     <span>{formatDuration(item.duration)}</span>
+                    <span>·</span>
                     <span>{formatDate(item.downloadedAt)}</span>
                   </div>
                 </div>
-
                 <a
                   href={`/api/serve/${item.filename}`}
                   download={item.filename}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   title="Download again"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +123,7 @@ export function DownloadHistory() {
                   </svg>
                 </a>
               </div>
-            )))}
+            ))}
           </div>
         </div>
       )}
