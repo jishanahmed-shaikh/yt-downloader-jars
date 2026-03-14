@@ -1,3 +1,10 @@
+/**
+ * @module downloader
+ * @description Server-side wrapper around yt-dlp for probing, downloading, and
+ * extracting audio from YouTube URLs. Handles binary resolution, filename
+ * sanitization, ffmpeg integration, and error mapping.
+ */
+
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
@@ -6,22 +13,35 @@ import { parseYtdlpError, createError, DownloadError } from './errors';
 
 const execAsync = promisify(exec);
 
+/** Metadata returned after a successful probe or download. */
 export interface VideoMetadata {
+  /** Video title (ASCII-safe, sanitized) */
   title: string;
+  /** Duration in seconds */
   duration: number;
+  /** Output filename (without directory) */
   filename: string;
+  /** Absolute path to the downloaded file */
   filepath: string;
+  /** File size in bytes */
   size: number;
+  /** YouTube video ID */
   videoId: string;
+  /** Thumbnail URL from YouTube */
   thumbnail?: string;
 }
 
+/** Unified result type returned by all public downloader functions. */
 export interface DownloadResult {
+  /** Whether the operation succeeded */
   success: boolean;
+  /** Populated on success */
   data?: VideoMetadata;
+  /** Populated on failure */
   error?: DownloadError;
 }
 
+/** Raw JSON shape returned by `yt-dlp --dump-json`. */
 interface YtdlpInfo {
   id: string;
   title: string;
@@ -31,64 +51,81 @@ interface YtdlpInfo {
   filesize_approx?: number;
 }
 
+/** Maximum allowed video duration in seconds (configurable via MAX_DURATION env var). */
 const MAX_DURATION = parseInt(process.env.MAX_DURATION || '7200', 10); // 2 hours default
 
+/**
+ * Resolves the download output directory.
+ * Supports relative paths (resolved from project root) and absolute paths.
+ */
 function getDownloadDir(): string {
   const dir = process.env.DOWNLOAD_DIR || '/tmp';
-  // Resolve relative paths from project root
   if (dir.startsWith('./') || dir.startsWith('.\\')) {
     return path.join(process.cwd(), dir);
   }
   return dir;
 }
 
+/**
+ * Sanitizes a video title into a safe filesystem filename.
+ * - Strips all non-ASCII characters (Arabic, emoji, CJK, etc.)
+ * - Removes shell-unsafe characters
+ * - Collapses whitespace to underscores
+ * - Truncates to 80 characters
+ * - Falls back to `"download"` if the result is empty
+ */
 function sanitizeFilename(title: string): string {
   return title
-    .replace(/[^\x00-\x7F]/g, '')          // Strip all non-ASCII (Arabic, emoji, etc.)
-    .replace(/[<>:"/\\|?*#%&{}$!'`@=+]/g, '') // Remove unsafe chars
+    .replace(/[^\x00-\x7F]/g, '')
+    .replace(/[<>:"/\\|?*#%&{}$!'`@=+]/g, '')
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '')                  // Trim leading/trailing underscores
-    .substring(0, 80) || 'download';        // Fallback if title is entirely non-ASCII
+    .replace(/^_|_$/g, '')
+    .substring(0, 80) || 'download';
 }
 
+/** Returns the absolute path to the local `bin/` directory. */
 function getBinDir(): string {
   return path.join(process.cwd(), 'bin');
 }
 
+/**
+ * Resolves the yt-dlp executable path.
+ * Prefers the bundled binary in `bin/`, falls back to the system PATH.
+ */
 function getYtdlpPath(): string {
   const isWindows = process.platform === 'win32';
   const ext = isWindows ? '.exe' : '';
   const binDir = getBinDir();
 
-  // Check local bin directory first (for bundled yt-dlp)
   const localBin = path.join(binDir, `yt-dlp${ext}`);
-  if (fs.existsSync(localBin)) {
-    return localBin;
-  }
+  if (fs.existsSync(localBin)) return localBin;
 
-  // Check without extension (Linux/Mac)
   const localBinNoExt = path.join(binDir, 'yt-dlp');
-  if (fs.existsSync(localBinNoExt)) {
-    return localBinNoExt;
-  }
+  if (fs.existsSync(localBinNoExt)) return localBinNoExt;
 
-  // Fall back to system yt-dlp
   return 'yt-dlp';
 }
 
+/**
+ * Returns the directory containing the bundled ffmpeg binary, or `null` if
+ * ffmpeg is not present in `bin/`. yt-dlp expects a directory path, not the
+ * binary path itself.
+ */
 function getFfmpegLocation(): string | null {
   const isWindows = process.platform === 'win32';
   const ext = isWindows ? '.exe' : '';
   const binDir = getBinDir();
 
   const localFfmpeg = path.join(binDir, `ffmpeg${ext}`);
-  if (fs.existsSync(localFfmpeg)) {
-    return binDir; // Return directory, not file path
-  }
+  if (fs.existsSync(localFfmpeg)) return binDir;
   return null;
 }
 
+/**
+ * Verifies that yt-dlp is available and executable.
+ * @returns The resolved yt-dlp path, or `null` if not found / not executable.
+ */
 async function checkYtdlp(): Promise<string | null> {
   const ytdlpPath = getYtdlpPath();
   try {
@@ -99,6 +136,13 @@ async function checkYtdlp(): Promise<string | null> {
   }
 }
 
+/**
+ * Probes a YouTube URL to retrieve video metadata without downloading.
+ * Also enforces the MAX_DURATION limit.
+ *
+ * @param url - A valid YouTube video or playlist URL
+ * @returns Metadata on success, or a structured error on failure
+ */
 export async function probeVideo(url: string): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
@@ -154,6 +198,16 @@ export async function probeVideo(url: string): Promise<DownloadResult> {
   }
 }
 
+/**
+ * Downloads a YouTube video as an MP4 file.
+ * Probes the video first to validate duration, then runs yt-dlp with the
+ * requested quality format and merges streams via ffmpeg.
+ *
+ * @param url     - YouTube video URL
+ * @param videoId - YouTube video ID (appended to the output filename)
+ * @param quality - Quality selector: `'best'`, `'worst'`, or a height like `'720'`
+ * @returns Metadata including the output filepath and file size
+ */
 export async function downloadVideo(url: string, videoId: string, quality: string = 'best'): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
@@ -221,6 +275,16 @@ export async function downloadVideo(url: string, videoId: string, quality: strin
   }
 }
 
+/**
+ * Extracts and downloads audio from a YouTube video as an MP3 file.
+ * Uses yt-dlp's `-x` flag with ffmpeg for conversion. Includes a fallback
+ * directory scan in case yt-dlp produces a slightly different output filename.
+ *
+ * @param url     - YouTube video URL
+ * @param videoId - YouTube video ID (appended to the output filename)
+ * @param quality - Passed through but audio always uses best quality (0)
+ * @returns Metadata including the output filepath and file size
+ */
 export async function downloadAudio(url: string, videoId: string, quality: string = 'best'): Promise<DownloadResult> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
@@ -288,6 +352,13 @@ export async function downloadAudio(url: string, videoId: string, quality: strin
     };
   }
 }
+/**
+ * Retrieves the list of videos in a YouTube playlist without downloading them.
+ * Uses `--flat-playlist` for fast metadata extraction.
+ *
+ * @param url - A YouTube playlist URL
+ * @returns Playlist metadata with an array of video entries, or an error
+ */
 export async function getPlaylistInfo(url: string): Promise<{ success: boolean; data?: any; error?: any }> {
   const ytdlpPath = await checkYtdlp();
   if (!ytdlpPath) {
