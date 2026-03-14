@@ -6,60 +6,53 @@ import { downloadStore } from '@/lib/download-store';
 export function QuickActions() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const clearAllData = () => {
-    if (confirm('Are you sure you want to clear all download history and queue?')) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
-
-  const downloadSampleVideo = () => {
-    // Add a sample YouTube video for testing
-    const sampleUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'; // Rick Roll for testing
-    navigator.clipboard.writeText(sampleUrl).then(() => {
-      alert('Sample URL copied to clipboard! Paste it in the download field.');
-    });
-  };
+  const actions = [
+    {
+      label: 'Clear completed',
+      onClick: () => { downloadStore.clearCompleted(); setIsOpen(false); },
+      className: 'text-gray-600 dark:text-gray-300',
+    },
+    {
+      label: 'Copy sample URL',
+      onClick: () => {
+        navigator.clipboard.writeText('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        setIsOpen(false);
+      },
+      className: 'text-gray-600 dark:text-gray-300',
+    },
+    {
+      label: 'Clear all data',
+      onClick: () => {
+        if (confirm('Clear all download history and queue?')) {
+          localStorage.clear();
+          window.location.reload();
+        }
+      },
+      className: 'text-red-600 dark:text-red-400',
+    },
+  ];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <div className={`mb-2 ${isOpen ? 'block' : 'hidden'}`}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 p-2 space-y-1">
-          <button
-            onClick={() => downloadStore.clearCompleted()}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-          >
-            🧹 Clear Completed
-          </button>
-          <button
-            onClick={downloadSampleVideo}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-          >
-            🎬 Sample Video
-          </button>
-          <button
-            onClick={() => {
-              const stats = downloadStore.getStats();
-              alert(`📊 Quick Stats:\n• Total Downloads: ${stats.totalDownloads}\n• Success Rate: ${stats.successRate}%\n• Today: ${stats.todayDownloads}`);
-            }}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-          >
-            📊 Quick Stats
-          </button>
-          <button
-            onClick={clearAllData}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-          >
-            🗑️ Clear All Data
-          </button>
+    <div className="fixed bottom-5 right-5 z-50">
+      {isOpen && (
+        <div className="absolute bottom-12 right-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-1.5 min-w-[160px]">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              onClick={action.onClick}
+              className={`w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${action.className}`}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
-      </div>
-      
+      )}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors"
+        className="bg-red-600 hover:bg-red-700 text-white w-10 h-10 rounded-full shadow-lg transition-all flex items-center justify-center"
+        title="Quick actions"
       >
-        <svg className={`w-6 h-6 transition-transform ${isOpen ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </button>
